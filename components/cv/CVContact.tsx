@@ -18,7 +18,8 @@ export function CVContact({ contact }: CVContactProps) {
         style={{
           display: "flex",
           gap: "20px",
-          fontSize: "9.5px",
+          fontSize: "11px",
+          fontWeight: 500,
           color: "var(--color-secondary)",
           letterSpacing: "0.01em",
         }}
@@ -26,6 +27,7 @@ export function CVContact({ contact }: CVContactProps) {
         <span className="hover-underline" style={{ cursor: "pointer" }}>{contact.location}</span>
         <span className="hover-underline" style={{ cursor: "pointer" }}>{contact.email}</span>
         <span className="hover-underline" style={{ cursor: "pointer" }}>{contact.website}</span>
+        <span className="hover-underline" style={{ cursor: "pointer" }}>{contact.instagram}</span>
       </div>
     </footer>
   );

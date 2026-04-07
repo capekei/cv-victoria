@@ -2,6 +2,7 @@ export interface ContactInfo {
   email: string;
   website: string;
   location: string;
+  instagram: string;
 }
 
 export interface Artwork {
@@ -16,6 +17,8 @@ export interface Exhibition {
   title: string;
   location: string;
   type: "upcoming" | "selected";
+  dates?: string;
+  gallery?: string;
 }
 
 export interface EducationEntry {
@@ -53,6 +56,7 @@ export const victoriaZeder: ArtistCV = {
     email: "hello@victoriazeder.com",
     website: "victoriazeder.com",
     location: "Miami, Florida",
+    instagram: "@victoriazeder.art",
   },
   statementExcerpt:
     "Victoria Zeder is a Miami-based visual artist working with gold leaf and line. Her practice investigates the invisible systems that structure connection, movement, and emotional continuity.",
@@ -89,12 +93,16 @@ export const victoriaZeder: ArtistCV = {
       title: "Hamptons Fine Art Fair",
       location: "Hamptons, NY",
       type: "upcoming",
+      dates: "July 9–12",
+      gallery: "Perseus Gallery",
     },
     {
       year: 2026,
       title: "Red Dot Miami",
       location: "Miami, FL",
       type: "upcoming",
+      dates: "December 2–6",
+      gallery: "Perseus Gallery",
     },
     {
       year: 2025,

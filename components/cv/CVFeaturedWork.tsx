@@ -97,7 +97,7 @@ export function CVFeaturedWork({ title, year, medium, dimensions }: CVFeaturedWo
         className="img-zoom-container"
         onClick={() => setIsExpanded(true)}
         style={{
-          height: "260px",
+          height: "380px",
           position: "relative",
           overflow: "hidden",
           borderRadius: "3px",
@@ -110,7 +110,7 @@ export function CVFeaturedWork({ title, year, medium, dimensions }: CVFeaturedWo
             ref={imgRef}
             style={{
               position: "absolute",
-              inset: "-40px 0",
+              inset: "-50px 0",
               willChange: "transform",
             }}
           >
@@ -132,14 +132,15 @@ export function CVFeaturedWork({ title, year, medium, dimensions }: CVFeaturedWo
             justifyContent: "space-between",
             alignItems: "baseline",
             gap: "12px",
-            fontSize: "10px",
+            fontSize: "11.5px",
+            fontWeight: 400,
             color: "var(--color-secondary)",
           }}
         >
           <span>
             <span
               className="font-serif italic"
-              style={{ color: "var(--color-ink)", fontSize: "11.5px" }}
+              style={{ color: "var(--color-ink)", fontSize: "13px" }}
             >
               {title}
             </span>
@@ -191,9 +192,10 @@ export function CVFeaturedWork({ title, year, medium, dimensions }: CVFeaturedWo
           </div>
           <div style={{ 
             marginTop: "24px", 
-            fontSize: "10px", 
-            color: "var(--color-secondary)", 
-            letterSpacing: "0.1em", 
+            fontSize: "11px",
+            fontWeight: 500,
+            color: "var(--color-secondary)",
+            letterSpacing: "0.1em",
             textTransform: "uppercase",
             cursor: "pointer"
           }}>

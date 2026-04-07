@@ -10,8 +10,9 @@ export function CVProfile({ text }: CVProfileProps) {
       <CVSectionLabel title="Profile" />
       <p
         style={{
-          fontSize: "11px",
+          fontSize: "12.5px",
           lineHeight: "1.85",
+          fontWeight: 400,
           color: "var(--color-secondary)",
         }}
       >

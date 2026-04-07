@@ -14,13 +14,14 @@ export function CVEducation({ education }: CVEducationProps) {
           <div key={entry.institution}>
             <p
               className="font-medium text-ink"
-              style={{ fontSize: "11.5px" }}
+              style={{ fontSize: "13px", fontWeight: 500 }}
             >
               {entry.degree}
             </p>
             <p
               style={{
-                fontSize: "10px",
+                fontSize: "11.5px",
+                fontWeight: 400,
                 color: "var(--color-secondary)",
                 marginTop: "2px",
               }}
@@ -40,11 +41,12 @@ export function CVEducation({ education }: CVEducationProps) {
                   <p
                     key={detail}
                     style={{
-                      fontSize: "9.5px",
+                      fontSize: "11px",
+                      fontWeight: 400,
                       color: "var(--color-secondary)",
                       paddingLeft: "12px",
                       position: "relative",
-                      opacity: 0.65,
+                      opacity: 0.75,
                     }}
                   >
                     <span

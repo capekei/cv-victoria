@@ -134,8 +134,8 @@ export function CVIdentity({ name, discipline, contact }: CVIdentityProps) {
           <p
             className="cv-discipline"
             style={{
-              fontSize: "10px",
-              fontWeight: 500,
+              fontSize: "11px",
+              fontWeight: 600,
               letterSpacing: "0.2em",
               textTransform: "uppercase",
               color: "var(--color-secondary)",
@@ -189,9 +189,10 @@ export function CVIdentity({ name, discipline, contact }: CVIdentityProps) {
           </div>
           <div style={{ 
             marginTop: "24px", 
-            fontSize: "10px", 
-            color: "var(--color-secondary)", 
-            letterSpacing: "0.1em", 
+            fontSize: "11px",
+            fontWeight: 500,
+            color: "var(--color-secondary)",
+            letterSpacing: "0.1em",
             textTransform: "uppercase",
             cursor: "pointer"
           }}>

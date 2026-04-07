@@ -8,8 +8,8 @@ export function CVSectionLabel({ title }: CVSectionLabelProps) {
       <h2
         style={{
           fontFamily: "var(--font-sans)",
-          fontSize: "9px",
-          fontWeight: 500,
+          fontSize: "10px",
+          fontWeight: 600,
           letterSpacing: "0.22em",
           textTransform: "uppercase" as const,
           color: "var(--color-accent)",

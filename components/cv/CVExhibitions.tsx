@@ -55,7 +55,7 @@ export function CVExhibitions({ exhibitions }: CVExhibitionsProps) {
         <div style={{ marginBottom: "16px" }}>
           <span
             style={{
-              fontSize: "8px",
+              fontSize: "9.5px",
               fontWeight: 600,
               letterSpacing: "0.15em",
               textTransform: "uppercase" as const,
@@ -78,7 +78,7 @@ export function CVExhibitions({ exhibitions }: CVExhibitionsProps) {
         <div>
           <span
             style={{
-              fontSize: "8px",
+              fontSize: "9.5px",
               fontWeight: 600,
               letterSpacing: "0.15em",
               textTransform: "uppercase" as const,
@@ -103,29 +103,49 @@ export function CVExhibitions({ exhibitions }: CVExhibitionsProps) {
 function ExhibitionRow({ exhibition }: { exhibition: Exhibition }) {
   return (
     <div
-      className="cv-exh-row hover-underline"
+      className="cv-exh-row"
       style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "baseline",
         width: "100%",
-        cursor: "pointer"
+        cursor: "pointer",
+        marginBottom: "2px",
       }}
     >
-      <span className="text-ink" style={{ fontSize: "11.5px" }}>
-        {exhibition.title}
-      </span>
-      <span
+      <div
+        className="hover-underline"
         style={{
-          fontSize: "9.5px",
-          color: "var(--color-secondary)",
-          letterSpacing: "0.02em",
-          flexShrink: 0,
-          marginLeft: "16px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "baseline",
         }}
       >
-        {exhibition.location}, {exhibition.year}
-      </span>
+        <span className="text-ink" style={{ fontSize: "13px", fontWeight: 500 }}>
+          {exhibition.title}
+        </span>
+        <span
+          style={{
+            fontSize: "11px",
+            fontWeight: 400,
+            color: "var(--color-secondary)",
+            letterSpacing: "0.02em",
+            flexShrink: 0,
+            marginLeft: "16px",
+          }}
+        >
+          {exhibition.location}, {exhibition.year}
+        </span>
+      </div>
+      {(exhibition.dates || exhibition.gallery) && (
+        <p
+          style={{
+            fontSize: "10.5px",
+            color: "var(--color-secondary)",
+            marginTop: "2px",
+            opacity: 0.75,
+          }}
+        >
+          {exhibition.dates}{exhibition.dates && exhibition.gallery ? " · " : ""}{exhibition.gallery}
+        </p>
+      )}
     </div>
   );
 }

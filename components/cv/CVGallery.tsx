@@ -168,7 +168,7 @@ export function CVGallery({ pieces }: CVGalleryProps) {
               <p
                 className="font-serif italic"
                 style={{
-                  fontSize: "11.5px",
+                  fontSize: "12.5px",
                   color: "var(--color-ink)",
                   marginTop: "8px",
                 }}
@@ -177,7 +177,8 @@ export function CVGallery({ pieces }: CVGalleryProps) {
               </p>
               <p
                 style={{
-                  fontSize: "9px",
+                  fontSize: "10.5px",
+                  fontWeight: 400,
                   color: "var(--color-secondary)",
                   marginTop: "2px",
                 }}
@@ -191,7 +192,8 @@ export function CVGallery({ pieces }: CVGalleryProps) {
         {/* Scroll hint */}
         <p
           style={{
-            fontSize: "8px",
+            fontSize: "9.5px",
+            fontWeight: 500,
             color: "var(--color-divider)",
             letterSpacing: "0.15em",
             textTransform: "uppercase",
@@ -273,6 +275,37 @@ function CVLightbox({ piece, index, total, onClose, onPrev, onNext }: CVLightbox
         cursor: "pointer",
       }}
     >
+      {/* Close button */}
+      <button
+        onClick={onClose}
+        style={{
+          position: "absolute",
+          top: "24px",
+          right: "24px",
+          width: "40px",
+          height: "40px",
+          border: "1px solid rgba(255,255,255,0.2)",
+          borderRadius: "50%",
+          background: "none",
+          color: "#fff",
+          fontSize: "18px",
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 101,
+          transition: "border-color 0.3s ease",
+        }}
+        onMouseEnter={(e) => {
+          (e.target as HTMLElement).style.borderColor = "rgba(255,255,255,0.5)";
+        }}
+        onMouseLeave={(e) => {
+          (e.target as HTMLElement).style.borderColor = "rgba(255,255,255,0.2)";
+        }}
+      >
+        ✕
+      </button>
+
       <div
         className="lb-content"
         onClick={(e) => e.stopPropagation()}

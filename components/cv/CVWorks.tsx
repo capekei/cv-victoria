@@ -60,13 +60,14 @@ export function CVWorks({ works }: CVWorksProps) {
             >
               <span
                 className="font-serif italic text-ink"
-                style={{ fontSize: "13px" }}
+                style={{ fontSize: "14px" }}
               >
                 {work.title}
               </span>
               <span
                 style={{
-                  fontSize: "10px",
+                  fontSize: "11px",
+                  fontWeight: 500,
                   color: "var(--color-secondary)",
                   flexShrink: 0,
                 }}
@@ -76,7 +77,8 @@ export function CVWorks({ works }: CVWorksProps) {
             </div>
             <p
               style={{
-                fontSize: "9.5px",
+                fontSize: "11px",
+                fontWeight: 400,
                 color: "var(--color-secondary)",
                 marginTop: "2px",
                 letterSpacing: "0.02em",
