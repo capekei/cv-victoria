@@ -1,26 +1,314 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-montserrat), "Helvetica Neue", Arial, sans-serif;
+  --font-serif: var(--font-bodoni), Georgia, "Times New Roman", serif;
+
+  --color-ink: #111111;
+  --color-secondary: #6B6B6B;
+  --color-cream: #F7F6F2;
+  --color-canvas: #E8E8EA;
+  --color-divider: #CFCFCF;
+  --color-accent: #B9D4F4;
+  --color-accent-light: #EDF3FB;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* ===== Fixed Viewport — no body scroll ===== */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
+  overscroll-behavior: none;
+}
+
+/* ===== Outer Shell ===== */
+.cv-shell {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px;
+}
+
+/* ===== Main Card — split layout ===== */
+.cv-card {
+  width: 100%;
+  max-width: 1060px;
+  height: calc(100vh - 56px);
+  background-color: var(--color-cream);
+  border-radius: 5px;
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.02),
+    0 20px 60px rgba(0,0,0,0.06);
+  display: flex;
+  overflow: hidden;
+  position: relative;
+}
+
+/* ===== Left: Identity Panel (static) ===== */
+.cv-identity {
+  width: 320px;
+  min-width: 320px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 56px 44px 40px;
+  border-right: 1px solid var(--color-divider);
+  position: relative;
+}
+
+/* ===== Right: Scroll Panel ===== */
+.cv-scroll-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+/* ===== Scroll Container ===== */
+.cv-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  padding: 52px 52px 40px;
+  overscroll-behavior: contain;
+}
+
+/* Thin elegant scrollbar */
+.cv-scroll::-webkit-scrollbar {
+  width: 3px;
+}
+.cv-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.cv-scroll::-webkit-scrollbar-thumb {
+  background-color: rgba(0,0,0,0.07);
+  border-radius: 3px;
+}
+.cv-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0,0,0,0.14);
+}
+.cv-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0,0,0,0.07) transparent;
+}
+
+/* ===== Scroll Progress ===== */
+.cv-progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  z-index: 10;
+}
+.cv-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-accent), #8BB8E8);
+  border-radius: 0 1px 1px 0;
+  will-change: width;
+  transition: width 0.12s ease-out;
+}
+
+/* ===== Section Spacing ===== */
+.cv-section {
+  margin-bottom: 44px;
+}
+.cv-section:last-child {
+  margin-bottom: 0;
+}
+
+/* ===== Section Label ===== */
+.cv-label {
+  font-family: var(--font-sans);
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  margin-bottom: 18px;
+}
+
+/* ===== Modern Link Hover Effect ===== */
+a, button, .hover-underline, .img-zoom-container, .portrait-zoom-container {
+  cursor: pointer !important;
+}
+
+.hover-underline {
+  position: relative;
+  display: inline-block;
+}
+
+.hover-underline::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  transform: scaleX(0);
+  height: 1px;
+  bottom: -2px;
+  left: 0;
+  background-color: currentColor;
+  transform-origin: bottom right;
+  transition: transform 0.4s cubic-bezier(0.86, 0, 0.07, 1);
+}
+
+.hover-underline:hover::after {
+  transform: scaleX(1);
+  transform-origin: bottom left;
+}
+
+/* ===== Image Hover Zoom & Expand ===== */
+.img-zoom-container {
+  overflow: hidden;
+  transition: height 0.7s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.img-zoom-container img {
+  transition: transform 0.9s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.img-zoom-container:hover {
+  height: 360px !important;
+}
+
+.img-zoom-container:hover img {
+  transform: scale(1.04);
+}
+
+/* ===== Portrait Hover Zoom & Expand ===== */
+.portrait-zoom-container {
+  transition: height 0.7s cubic-bezier(0.19, 1, 0.22, 1);
+  cursor: pointer;
+}
+.portrait-zoom-container img {
+  transition: transform 0.9s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+@media (min-width: 769px) {
+  .portrait-zoom-container:hover {
+    height: 260px !important;
+  }
+  .portrait-zoom-container:hover img {
+    transform: scale(1.04);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ===== Film Grain Overlay ===== */
+.noise-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+.cv-divider {
+  border: none;
+  border-top: 1px solid var(--color-divider);
+}
+
+/* ===== Gallery Strip — hide scrollbar ===== */
+.gallery-strip::-webkit-scrollbar {
+  display: none;
+}
+
+/* ===== Portrait in Identity ===== */
+.cv-portrait {
+  overflow: hidden;
+  border-radius: 3px;
+  will-change: clip-path;
+}
+.cv-portrait img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ===== Featured Artwork ===== */
+.cv-artwork-frame {
+  overflow: hidden;
+  border-radius: 2px;
+  margin-left: -52px;
+  margin-right: -52px;
+}
+.cv-artwork-frame img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* ===== Responsive: stack on small screens ===== */
+@media (max-width: 768px) {
+  .cv-identity {
+    width: 100% !important;
+    min-width: 100% !important;
+    height: auto !important;
+    border-right: none !important;
+    border-bottom: 1px solid var(--color-divider);
+    padding: 28px 28px 24px !important;
+    flex-direction: column !important;
+    align-items: flex-start;
+    gap: 0;
+  }
+  .cv-identity-top {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 20px;
+    width: 100%;
+  }
+  .cv-identity-top > div:not(.cv-portrait):not(.cv-accent-bar) {
+    /* To wrap name and discipline if needed, but they are direct children */
+  }
+  .cv-accent-bar {
+    display: none !important;
+  }
+  .cv-name-discipline {
+    display: flex;
+    flex-direction: column;
+  }
+  .cv-name {
+    font-size: 24px !important;
+  }
+  .cv-discipline {
+    margin-top: 4px !important;
+  }
+  .cv-portrait {
+    width: 56px !important;
+    height: 56px !important;
+    min-width: 56px !important;
+    border-radius: 50% !important;
+    margin-bottom: 0 !important;
+  }
+  .cv-id-contact {
+    display: none !important;
+  }
+  .cv-scroll {
+    padding: 28px !important;
+  }
+  .cv-artwork-frame {
+    margin-left: -28px;
+    margin-right: -28px;
+  }
+  /* Ensure the shell stacks vertically on mobile */
+  .cv-shell-container {
+    flex-direction: column !important;
+  }
+}
+
+/* ===== Print ===== */
+@media print {
+  html, body { overflow: visible; height: auto; }
+  .cv-shell { position: static; padding: 0; }
+  .cv-card { max-width: none; height: auto; box-shadow: none; border-radius: 0; flex-direction: column; }
+  .cv-identity { border-right: none; border-bottom: 1px solid #ccc; width: 100%; min-width: 100%; }
+  .cv-scroll-panel { overflow: visible; }
+  .cv-scroll { overflow: visible; padding: 18mm 22mm; }
+  .cv-progress { display: none; }
 }
