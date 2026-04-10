@@ -6,6 +6,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Image from "next/image";
 import type { GalleryPiece } from "@/data/victoria-zeder";
 import { CVSectionLabel } from "./CVSectionLabel";
+import { CVLightbox } from "./CVLightbox";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -208,7 +209,12 @@ export function CVGallery({ pieces }: CVGalleryProps) {
       {/* ── Lightbox Overlay ── */}
       {activeIndex !== null && (
         <CVLightbox
-          piece={pieces[activeIndex]}
+          item={{
+            title: pieces[activeIndex].title,
+            caption: `${pieces[activeIndex].medium}, ${pieces[activeIndex].dimensions} · ${pieces[activeIndex].year}`,
+            image: pieces[activeIndex].image,
+            additionalImages: pieces[activeIndex].additionalImages,
+          }}
           index={activeIndex}
           total={pieces.length}
           onClose={closeLightbox}
@@ -217,201 +223,5 @@ export function CVGallery({ pieces }: CVGalleryProps) {
         />
       )}
     </>
-  );
-}
-
-/* ═══════════════════════════════════════════════
-   Lightbox — full-screen overlay
-   ═══════════════════════════════════════════════ */
-
-interface CVLightboxProps {
-  piece: GalleryPiece;
-  index: number;
-  total: number;
-  onClose: () => void;
-  onPrev: () => void;
-  onNext: () => void;
-}
-
-function CVLightbox({ piece, index, total, onClose, onPrev, onNext }: CVLightboxProps) {
-  const ref = useRef<HTMLDivElement>(null);
-
-  /* Animate in */
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    gsap.fromTo(el, { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "power2.out" });
-    gsap.fromTo(
-      el.querySelector(".lb-content"),
-      { y: 20, opacity: 0 },
-      { y: 0, opacity: 1, duration: 0.4, delay: 0.1, ease: "power2.out" }
-    );
-  }, []);
-
-  /* Keyboard navigation */
-  useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-      if (e.key === "ArrowLeft") onPrev();
-      if (e.key === "ArrowRight") onNext();
-    };
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
-  }, [onClose, onPrev, onNext]);
-
-  return (
-    <div
-      ref={ref}
-      onClick={onClose}
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 100,
-        backgroundColor: "rgba(0, 0, 0, 0.88)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "40px",
-        cursor: "pointer",
-      }}
-    >
-      {/* Close button */}
-      <button
-        onClick={onClose}
-        style={{
-          position: "absolute",
-          top: "24px",
-          right: "24px",
-          width: "40px",
-          height: "40px",
-          border: "1px solid rgba(255,255,255,0.2)",
-          borderRadius: "50%",
-          background: "none",
-          color: "#fff",
-          fontSize: "18px",
-          cursor: "pointer",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          zIndex: 101,
-          transition: "border-color 0.3s ease",
-        }}
-        onMouseEnter={(e) => {
-          (e.target as HTMLElement).style.borderColor = "rgba(255,255,255,0.5)";
-        }}
-        onMouseLeave={(e) => {
-          (e.target as HTMLElement).style.borderColor = "rgba(255,255,255,0.2)";
-        }}
-      >
-        ✕
-      </button>
-
-      <div
-        className="lb-content"
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          maxWidth: "680px",
-          width: "100%",
-          cursor: "default",
-        }}
-      >
-        {/* Image */}
-        <div
-          style={{
-            width: "100%",
-            height: "480px",
-            position: "relative",
-            borderRadius: "4px",
-            overflow: "hidden",
-          }}
-        >
-          <Image
-            src={piece.image}
-            alt={piece.title}
-            fill
-            sizes="680px"
-            style={{ objectFit: "contain" }}
-          />
-        </div>
-
-        {/* Info bar */}
-        <div
-          style={{
-            width: "100%",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "baseline",
-            marginTop: "16px",
-            gap: "16px",
-          }}
-        >
-          <div>
-            <p
-              className="font-serif italic"
-              style={{ fontSize: "15px", color: "#fff" }}
-            >
-              {piece.title}
-            </p>
-            <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.5)", marginTop: "4px" }}>
-              {piece.medium}, {piece.dimensions} — {piece.year}
-            </p>
-          </div>
-          <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.35)", flexShrink: 0 }}>
-            {index + 1} / {total}
-          </p>
-        </div>
-
-        {/* Navigation arrows */}
-        <div
-          style={{
-            display: "flex",
-            gap: "12px",
-            marginTop: "20px",
-          }}
-        >
-          <button
-            onClick={onPrev}
-            disabled={index === 0}
-            style={{
-              width: "36px",
-              height: "36px",
-              border: "1px solid rgba(255,255,255,0.2)",
-              borderRadius: "50%",
-              background: "none",
-              color: index === 0 ? "rgba(255,255,255,0.15)" : "#fff",
-              cursor: index === 0 ? "default" : "pointer",
-              fontSize: "14px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            ←
-          </button>
-          <button
-            onClick={onNext}
-            disabled={index === total - 1}
-            style={{
-              width: "36px",
-              height: "36px",
-              border: "1px solid rgba(255,255,255,0.2)",
-              borderRadius: "50%",
-              background: "none",
-              color: index === total - 1 ? "rgba(255,255,255,0.15)" : "#fff",
-              cursor: index === total - 1 ? "default" : "pointer",
-              fontSize: "14px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            →
-          </button>
-        </div>
-      </div>
-    </div>
   );
 }

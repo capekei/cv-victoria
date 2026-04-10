@@ -18,8 +18,16 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "Victoria Zeder — Artist CV",
-  description: "Artist CV — Victoria Zeder, Miami-based visual artist working with gold leaf and line.",
+  title: "Victoria Zeder · Artist CV",
+  description: "Victoria Zeder is a Miami-based visual artist working with gold leaf and line.",
+  metadataBase: new URL("https://victoriazeder.com"),
+  openGraph: {
+    title: "Victoria Zeder · Artist CV",
+    description: "Miami-based visual artist working with gold leaf and line.",
+    url: "https://victoriazeder.com",
+    siteName: "Victoria Zeder",
+    type: "website",
+  },
 };
 
 export default function RootLayout({

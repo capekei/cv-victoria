@@ -5,6 +5,12 @@ interface CVContactProps {
 }
 
 export function CVContact({ contact }: CVContactProps) {
+  const linkStyle = {
+    color: "inherit",
+    textDecoration: "none",
+    cursor: "pointer",
+  } as const;
+
   return (
     <footer style={{ paddingTop: "4px" }}>
       <hr
@@ -24,10 +30,10 @@ export function CVContact({ contact }: CVContactProps) {
           letterSpacing: "0.01em",
         }}
       >
-        <span className="hover-underline" style={{ cursor: "pointer" }}>{contact.location}</span>
-        <span className="hover-underline" style={{ cursor: "pointer" }}>{contact.email}</span>
-        <span className="hover-underline" style={{ cursor: "pointer" }}>{contact.website}</span>
-        <span className="hover-underline" style={{ cursor: "pointer" }}>{contact.instagram}</span>
+        <span className="hover-underline">{contact.location}</span>
+        <a href={`mailto:${contact.email}`} className="hover-underline" style={linkStyle}>{contact.email}</a>
+        <a href={`https://${contact.website}`} target="_blank" rel="noopener noreferrer" className="hover-underline" style={linkStyle}>{contact.website}</a>
+        <a href={`https://instagram.com/${contact.instagram.replace("@", "")}`} target="_blank" rel="noopener noreferrer" className="hover-underline" style={linkStyle}>{contact.instagram}</a>
       </div>
     </footer>
   );
