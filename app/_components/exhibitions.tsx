@@ -3,16 +3,16 @@
 import { useRef, useEffect } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import type { Exhibition } from "@/data/victoria-zeder";
-import { CVSectionLabel } from "./CVSectionLabel";
+import type { Exhibition } from "@/app/artist";
+import { SectionLabel } from "./section-label";
 
 gsap.registerPlugin(ScrollTrigger);
 
-interface CVExhibitionsProps {
+interface ExhibitionsProps {
   exhibitions: Exhibition[];
 }
 
-export function CVExhibitions({ exhibitions }: CVExhibitionsProps) {
+export function Exhibitions({ exhibitions }: ExhibitionsProps) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -49,7 +49,7 @@ export function CVExhibitions({ exhibitions }: CVExhibitionsProps) {
 
   return (
     <section ref={ref} style={{ marginBottom: "40px" }}>
-      <CVSectionLabel title="Exhibitions" />
+      <SectionLabel title="Exhibitions" />
 
       {upcoming.length > 0 && (
         <div style={{ marginBottom: "16px" }}>

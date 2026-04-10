@@ -1,8 +1,8 @@
-interface CVSectionLabelProps {
+interface SectionLabelProps {
   title: string;
 }
 
-export function CVSectionLabel({ title }: CVSectionLabelProps) {
+export function SectionLabel({ title }: SectionLabelProps) {
   return (
     <div style={{ marginBottom: "20px" }}>
       <h2

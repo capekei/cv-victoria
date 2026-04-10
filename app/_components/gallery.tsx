@@ -4,17 +4,17 @@ import { useRef, useEffect, useState, useCallback } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Image from "next/image";
-import type { GalleryPiece } from "@/data/victoria-zeder";
-import { CVSectionLabel } from "./CVSectionLabel";
-import { CVLightbox } from "./CVLightbox";
+import type { GalleryPiece } from "@/app/artist";
+import { SectionLabel } from "./section-label";
+import { Lightbox } from "./lightbox";
 
 gsap.registerPlugin(ScrollTrigger);
 
-interface CVGalleryProps {
+interface GalleryProps {
   pieces: GalleryPiece[];
 }
 
-export function CVGallery({ pieces }: CVGalleryProps) {
+export function Gallery({ pieces }: GalleryProps) {
   const sectionRef = useRef<HTMLDivElement>(null);
   const stripRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
@@ -105,7 +105,7 @@ export function CVGallery({ pieces }: CVGalleryProps) {
   return (
     <>
       <section ref={sectionRef} style={{ marginBottom: "40px" }}>
-        <CVSectionLabel title="Works" />
+        <SectionLabel title="Works" />
 
         {/* Horizontal scroll strip */}
         <div
@@ -210,7 +210,7 @@ export function CVGallery({ pieces }: CVGalleryProps) {
 
       {/* ── Lightbox Overlay ── */}
       {activeIndex !== null && (
-        <CVLightbox
+        <Lightbox
           item={{
             title: pieces[activeIndex].title,
             caption: `${pieces[activeIndex].medium}, ${pieces[activeIndex].dimensions} · ${pieces[activeIndex].year}`,

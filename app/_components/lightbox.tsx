@@ -9,9 +9,10 @@ export interface LightboxItem {
   caption?: string;
   image: string;
   additionalImages?: string[];
+  video?: string;
 }
 
-interface CVLightboxProps {
+interface LightboxProps {
   item: LightboxItem;
   index: number;
   total: number;
@@ -20,14 +21,16 @@ interface CVLightboxProps {
   onNext: () => void;
 }
 
-export function CVLightbox({ item, index, total, onClose, onPrev, onNext }: CVLightboxProps) {
+export function Lightbox({ item, index, total, onClose, onPrev, onNext }: LightboxProps) {
   const ref = useRef<HTMLDivElement>(null);
   const allImages = [item.image, ...(item.additionalImages ?? [])];
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
-  /* Reset active image when item changes */
+  /* Reset active image + fullscreen when item changes */
   useEffect(() => {
     setActiveImageIndex(0);
+    setIsFullscreen(false);
   }, [item]);
 
   /* Animate in */
@@ -45,13 +48,16 @@ export function CVLightbox({ item, index, total, onClose, onPrev, onNext }: CVLi
   /* Keyboard navigation */
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        if (isFullscreen) setIsFullscreen(false);
+        else onClose();
+      }
       if (e.key === "ArrowLeft") onPrev();
       if (e.key === "ArrowRight") onNext();
     };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [onClose, onPrev, onNext]);
+  }, [onClose, onPrev, onNext, isFullscreen]);
 
   return (
     <div
@@ -67,8 +73,9 @@ export function CVLightbox({ item, index, total, onClose, onPrev, onNext }: CVLi
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        padding: "48px",
+        padding: "32px",
         cursor: "pointer",
+        overflowY: "auto",
       }}
     >
       <div
@@ -77,37 +84,63 @@ export function CVLightbox({ item, index, total, onClose, onPrev, onNext }: CVLi
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          maxWidth: "min(1200px, 92vw)",
+          maxWidth: "min(1400px, 96vw)",
           width: "100%",
+          height: "100%",
           cursor: "pointer",
         }}
       >
-        {/* Image */}
+        {/* Image or Video */}
         <div
+          onClick={(e) => {
+            e.stopPropagation();
+            if (!item.video) setIsFullscreen((v) => !v);
+          }}
           style={{
             width: "100%",
-            height: "min(78vh, 820px)",
+            flex: "1 1 auto",
+            minHeight: 0,
             position: "relative",
             overflow: "hidden",
+            cursor: item.video ? "default" : "zoom-in",
           }}
         >
-          <Image
-            src={allImages[activeImageIndex]}
-            alt={item.title}
-            fill
-            sizes="92vw"
-            style={{ objectFit: "contain" }}
-            priority
-          />
+          {item.video ? (
+            <video
+              src={item.video}
+              autoPlay
+              muted
+              loop
+              playsInline
+              controls={false}
+              style={{
+                position: "absolute",
+                inset: 0,
+                width: "100%",
+                height: "100%",
+                objectFit: "contain",
+              }}
+            />
+          ) : (
+            <Image
+              src={allImages[activeImageIndex]}
+              alt={item.title}
+              fill
+              sizes="96vw"
+              style={{ objectFit: "contain" }}
+              priority
+            />
+          )}
         </div>
 
-        {/* Thumbnail strip (only if multiple images) */}
-        {allImages.length > 1 && (
+        {/* Thumbnail strip (only if multiple images and not a video item) */}
+        {!item.video && allImages.length > 1 && (
           <div
             style={{
               display: "flex",
               gap: "8px",
-              marginTop: "22px",
+              marginTop: "16px",
+              flexShrink: 0,
               flexWrap: "wrap",
               justifyContent: "center",
             }}
@@ -148,8 +181,9 @@ export function CVLightbox({ item, index, total, onClose, onPrev, onNext }: CVLi
             display: "flex",
             justifyContent: "space-between",
             alignItems: "baseline",
-            marginTop: "24px",
+            marginTop: "16px",
             gap: "16px",
+            flexShrink: 0,
           }}
         >
           <div>
@@ -192,7 +226,8 @@ export function CVLightbox({ item, index, total, onClose, onPrev, onNext }: CVLi
             style={{
               display: "flex",
               gap: "14px",
-              marginTop: "22px",
+              marginTop: "14px",
+              flexShrink: 0,
             }}
           >
             <button
@@ -246,12 +281,44 @@ export function CVLightbox({ item, index, total, onClose, onPrev, onNext }: CVLi
             color: "rgba(255, 255, 255, 0.35)",
             letterSpacing: "0.2em",
             textTransform: "uppercase",
-            marginTop: "22px",
+            marginTop: "14px",
+            flexShrink: 0,
           }}
         >
-          Tap anywhere to close
+          {item.video ? "Tap outside to close" : "Tap image to enlarge · tap outside to close"}
         </p>
       </div>
+
+      {/* Fullscreen image overlay */}
+      {isFullscreen && (
+        <div
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsFullscreen(false);
+          }}
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 110,
+            backgroundColor: "rgba(10, 9, 8, 0.98)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "zoom-out",
+          }}
+        >
+          <div style={{ position: "relative", width: "100vw", height: "100vh" }}>
+            <Image
+              src={allImages[activeImageIndex]}
+              alt={item.title}
+              fill
+              sizes="100vw"
+              style={{ objectFit: "contain" }}
+              priority
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,10 +1,10 @@
-import type { ContactInfo } from "@/data/victoria-zeder";
+import type { ContactInfo } from "@/app/artist";
 
-interface CVContactProps {
+interface ContactProps {
   contact: ContactInfo;
 }
 
-export function CVContact({ contact }: CVContactProps) {
+export function Contact({ contact }: ContactProps) {
   const linkStyle = {
     color: "inherit",
     textDecoration: "none",

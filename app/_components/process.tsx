@@ -3,18 +3,18 @@
 import { useRef, useEffect, useState, useCallback } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import Image from "next/image";
-import type { ProcessStep } from "@/data/victoria-zeder";
-import { CVSectionLabel } from "./CVSectionLabel";
-import { CVLightbox } from "./CVLightbox";
+import type { ProcessStep } from "@/app/artist";
+import { SectionLabel } from "./section-label";
+import { Lightbox } from "./lightbox";
+import { ProcessMedia } from "./process-media";
 
 gsap.registerPlugin(ScrollTrigger);
 
-interface CVProcessProps {
+interface ProcessProps {
   steps: ProcessStep[];
 }
 
-export function CVProcess({ steps }: CVProcessProps) {
+export function Process({ steps }: ProcessProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
@@ -63,7 +63,7 @@ export function CVProcess({ steps }: CVProcessProps) {
   return (
     <>
       <section ref={ref} style={{ marginBottom: "40px" }}>
-        <CVSectionLabel title="Process" />
+        <SectionLabel title="Process" />
 
         <p
           className="font-serif italic"
@@ -105,19 +105,7 @@ export function CVProcess({ steps }: CVProcessProps) {
                   cursor: "pointer",
                 }}
               >
-                <Image
-                  src={step.image}
-                  alt={step.title}
-                  fill
-                  sizes="140px"
-                  style={{ objectFit: "cover", transition: "transform 0.4s ease" }}
-                  onMouseEnter={(e) => {
-                    (e.target as HTMLElement).style.transform = "scale(1.04)";
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.target as HTMLElement).style.transform = "scale(1)";
-                  }}
-                />
+                <ProcessMedia image={step.image} video={step.video} alt={step.title} />
               </button>
               <div>
                 <h3
@@ -145,11 +133,12 @@ export function CVProcess({ steps }: CVProcessProps) {
       </section>
 
       {activeIndex !== null && (
-        <CVLightbox
+        <Lightbox
           item={{
             title: steps[activeIndex].title,
             caption: steps[activeIndex].description,
             image: steps[activeIndex].image,
+            video: steps[activeIndex].video,
           }}
           index={activeIndex}
           total={steps.length}

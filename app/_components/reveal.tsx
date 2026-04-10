@@ -6,12 +6,12 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
-interface CVRevealProps {
+interface RevealProps {
   children: React.ReactNode;
   delay?: number;
 }
 
-export function CVReveal({ children, delay = 0 }: CVRevealProps) {
+export function Reveal({ children, delay = 0 }: RevealProps) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

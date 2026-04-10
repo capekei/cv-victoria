@@ -1,8 +1,8 @@
-interface CVStatementProps {
+interface StatementProps {
   paragraphs: string[];
 }
 
-export function CVStatement({ paragraphs }: CVStatementProps) {
+export function Statement({ paragraphs }: StatementProps) {
   return (
     <section style={{ marginBottom: "40px" }}>
       {/* Section label */}

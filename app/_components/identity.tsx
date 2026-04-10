@@ -3,15 +3,15 @@
 import { useRef, useEffect, useState } from "react";
 import { gsap } from "gsap";
 import Image from "next/image";
-import type { ContactInfo } from "@/data/victoria-zeder";
+import type { ContactInfo } from "@/app/artist";
 
-interface CVIdentityProps {
+interface IdentityProps {
   name: string;
   discipline: string;
   contact: ContactInfo;
 }
 
-export function CVIdentity({ name, discipline, contact }: CVIdentityProps) {
+export function Identity({ name, discipline, contact }: IdentityProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const lightboxRef = useRef<HTMLDivElement>(null);

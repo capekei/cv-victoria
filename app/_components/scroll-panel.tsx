@@ -11,11 +11,11 @@ gsap.registerPlugin(ScrollTrigger);
 const ScrollContext = createContext<HTMLDivElement | null>(null);
 export const useScrollContainer = () => useContext(ScrollContext);
 
-interface CVScrollPanelProps {
+interface ScrollPanelProps {
   children: React.ReactNode;
 }
 
-export function CVScrollPanel({ children }: CVScrollPanelProps) {
+export function ScrollPanel({ children }: ScrollPanelProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const [progress, setProgress] = useState(0);

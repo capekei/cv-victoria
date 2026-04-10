@@ -34,6 +34,7 @@ export interface ProcessStep {
   title: string;
   description: string;
   image: string;
+  video?: string;
 }
 
 export interface ArtistCV {
@@ -192,6 +193,7 @@ export const victoriaZeder: ArtistCV = {
       description:
         "Every mark begins with a custom-built tool, a precision-aperture funnel Victoria engineered herself. It deposits acrylic ink in continuous dots, spirals, and lines at speed, without direct surface contact. The canvas lies horizontal on the studio floor while the artist moves over and around it, scale felt through the body.",
       image: "/process/drip-funnel.jpg",
+      video: "/process-videos/drip-funnel.mp4",
     },
     {
       title: "The Gold Leaf",
@@ -204,18 +206,21 @@ export const victoriaZeder: ArtistCV = {
       description:
         "Color is built in layers, never poured. Every shape is drawn by hand with the squeeze bottle, the artist reading the painting as it fills in. The colors are chosen in the moment, responsive to what the composition asks for next.",
       image: "/process/acrylic-build.jpg",
+      video: "/process-videos/acrylic-build.mp4",
     },
     {
       title: "The Gold Pour",
       description:
         "On the Living Systems paintings, gold is poured along the canvas edges in slow, intentional lines. It seals the composition and lets the painting continue past the frame.",
       image: "/process/gold-pour.jpg",
+      video: "/process-videos/gold-pour.mp4",
     },
     {
       title: "The Sphere",
       description:
         "Hand-formed over a rigid armature, coated in encaustic wax, surface-poured with iridescent metallic paint and sealed. Each sphere takes several sessions. The fluid pour is a flow state process where teal, cobalt, and gold mix and move on the surface until the composition resolves.",
       image: "/process/sphere-tools.jpg",
+      video: "/process-videos/sphere.mp4",
     },
   ],
 };

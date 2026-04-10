@@ -1,14 +1,14 @@
-import type { EducationEntry } from "@/data/victoria-zeder";
-import { CVSectionLabel } from "./CVSectionLabel";
+import type { EducationEntry } from "@/app/artist";
+import { SectionLabel } from "./section-label";
 
-interface CVEducationProps {
+interface EducationProps {
   education: EducationEntry[];
 }
 
-export function CVEducation({ education }: CVEducationProps) {
+export function Education({ education }: EducationProps) {
   return (
     <section style={{ marginBottom: "40px" }}>
-      <CVSectionLabel title="Education" />
+      <SectionLabel title="Education" />
       <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
         {education.map((entry) => (
           <div key={entry.institution}>

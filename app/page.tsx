@@ -1,59 +1,52 @@
-import { victoriaZeder } from "@/data/victoria-zeder";
-import { CVShell } from "@/components/cv/CVShell";
-import { CVIdentity } from "@/components/cv/CVIdentity";
-import { CVScrollPanel } from "@/components/cv/CVScrollPanel";
-import { CVStatement } from "@/components/cv/CVStatement";
-import { CVExhibitions } from "@/components/cv/CVExhibitions";
-import { CVEducation } from "@/components/cv/CVEducation";
-import { CVContact } from "@/components/cv/CVContact";
-import { CVGallery } from "@/components/cv/CVGallery";
-import { CVProcess } from "@/components/cv/CVProcess";
-import { CVReveal } from "@/components/cv/CVReveal";
-
 import type { Metadata } from "next";
+import { victoriaZeder } from "@/app/artist";
+import { Shell } from "./_components/shell";
+import { Identity } from "./_components/identity";
+import { ScrollPanel } from "./_components/scroll-panel";
+import { Reveal } from "./_components/reveal";
+import { Statement } from "./_components/statement";
+import { Gallery } from "./_components/gallery";
+import { Process } from "./_components/process";
+import { Exhibitions } from "./_components/exhibitions";
+import { Education } from "./_components/education";
+import { Contact } from "./_components/contact";
 
 export const metadata: Metadata = {
   title: "Victoria Zeder · Artist CV",
 };
 
-export default function CVPage() {
+export default function Page() {
   const cv = victoriaZeder;
 
   return (
-    <CVShell
-      identity={
-        <CVIdentity
-          name={cv.name}
-          discipline={cv.discipline}
-          contact={cv.contact}
-        />
-      }
+    <Shell
+      identity={<Identity name={cv.name} discipline={cv.discipline} contact={cv.contact} />}
     >
-      <CVScrollPanel>
-        {/* 1. Voice — who she is and what the work is about */}
-        <CVReveal>
-          <CVStatement paragraphs={cv.statementFull} />
-        </CVReveal>
+      <ScrollPanel>
+        {/* 1. Voice */}
+        <Reveal>
+          <Statement paragraphs={cv.statementFull} />
+        </Reveal>
 
-        {/* 2. The work itself */}
-        <CVGallery pieces={cv.gallery} />
+        {/* 2. The work */}
+        <Gallery pieces={cv.gallery} />
 
         {/* 3. How it's made */}
-        <CVProcess steps={cv.process} />
+        <Process steps={cv.process} />
 
         {/* 4. Where it's shown */}
-        <CVExhibitions exhibitions={cv.exhibitions} />
+        <Exhibitions exhibitions={cv.exhibitions} />
 
         {/* 5. Credentials */}
-        <CVReveal>
-          <CVEducation education={cv.education} />
-        </CVReveal>
+        <Reveal>
+          <Education education={cv.education} />
+        </Reveal>
 
         {/* 6. How to reach her */}
-        <CVReveal>
-          <CVContact contact={cv.contact} />
-        </CVReveal>
-      </CVScrollPanel>
-    </CVShell>
+        <Reveal>
+          <Contact contact={cv.contact} />
+        </Reveal>
+      </ScrollPanel>
+    </Shell>
   );
 }
