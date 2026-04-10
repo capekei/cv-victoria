@@ -61,11 +61,13 @@ export function CVLightbox({ item, index, total, onClose, onPrev, onNext }: CVLi
         position: "fixed",
         inset: 0,
         zIndex: 100,
-        backgroundColor: "rgba(247, 246, 242, 0.98)",
+        backgroundColor: "rgba(20, 18, 16, 0.96)",
+        backdropFilter: "blur(8px)",
+        WebkitBackdropFilter: "blur(8px)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        padding: "40px",
+        padding: "48px",
         cursor: "pointer",
       }}
     >
@@ -75,7 +77,7 @@ export function CVLightbox({ item, index, total, onClose, onPrev, onNext }: CVLi
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          maxWidth: "680px",
+          maxWidth: "min(1200px, 92vw)",
           width: "100%",
           cursor: "pointer",
         }}
@@ -84,9 +86,8 @@ export function CVLightbox({ item, index, total, onClose, onPrev, onNext }: CVLi
         <div
           style={{
             width: "100%",
-            height: "480px",
+            height: "min(78vh, 820px)",
             position: "relative",
-            borderRadius: "4px",
             overflow: "hidden",
           }}
         >
@@ -94,8 +95,9 @@ export function CVLightbox({ item, index, total, onClose, onPrev, onNext }: CVLi
             src={allImages[activeImageIndex]}
             alt={item.title}
             fill
-            sizes="680px"
+            sizes="92vw"
             style={{ objectFit: "contain" }}
+            priority
           />
         </div>
 
@@ -105,7 +107,7 @@ export function CVLightbox({ item, index, total, onClose, onPrev, onNext }: CVLi
             style={{
               display: "flex",
               gap: "8px",
-              marginTop: "14px",
+              marginTop: "22px",
               flexWrap: "wrap",
               justifyContent: "center",
             }}
@@ -118,23 +120,22 @@ export function CVLightbox({ item, index, total, onClose, onPrev, onNext }: CVLi
                   setActiveImageIndex(i);
                 }}
                 style={{
-                  width: "54px",
-                  height: "54px",
+                  width: "48px",
+                  height: "48px",
                   position: "relative",
                   border:
                     i === activeImageIndex
-                      ? "1.5px solid var(--color-ink)"
-                      : "1px solid var(--color-divider)",
-                  borderRadius: "2px",
+                      ? "1px solid rgba(255, 255, 255, 0.85)"
+                      : "1px solid rgba(255, 255, 255, 0.15)",
                   overflow: "hidden",
                   padding: 0,
                   cursor: "pointer",
                   background: "none",
-                  opacity: i === activeImageIndex ? 1 : 0.65,
-                  transition: "opacity 0.2s ease",
+                  opacity: i === activeImageIndex ? 1 : 0.45,
+                  transition: "opacity 0.3s ease, border-color 0.3s ease",
                 }}
               >
-                <Image src={src} alt="" fill sizes="54px" style={{ objectFit: "cover" }} />
+                <Image src={src} alt="" fill sizes="48px" style={{ objectFit: "cover" }} />
               </button>
             ))}
           </div>
@@ -147,25 +148,39 @@ export function CVLightbox({ item, index, total, onClose, onPrev, onNext }: CVLi
             display: "flex",
             justifyContent: "space-between",
             alignItems: "baseline",
-            marginTop: "16px",
+            marginTop: "24px",
             gap: "16px",
           }}
         >
           <div>
             <p
               className="font-serif italic"
-              style={{ fontSize: "15px", color: "var(--color-ink)" }}
+              style={{ fontSize: "15px", color: "rgba(255, 255, 255, 0.92)" }}
             >
               {item.title}
             </p>
             {item.caption && (
-              <p style={{ fontSize: "10px", color: "var(--color-secondary)", marginTop: "4px" }}>
+              <p
+                style={{
+                  fontSize: "10px",
+                  color: "rgba(255, 255, 255, 0.5)",
+                  marginTop: "5px",
+                  letterSpacing: "0.01em",
+                }}
+              >
                 {item.caption}
               </p>
             )}
           </div>
           {total > 1 && (
-            <p style={{ fontSize: "10px", color: "var(--color-secondary)", flexShrink: 0 }}>
+            <p
+              style={{
+                fontSize: "10px",
+                color: "rgba(255, 255, 255, 0.5)",
+                flexShrink: 0,
+                letterSpacing: "0.05em",
+              }}
+            >
               {index + 1} / {total}
             </p>
           )}
@@ -176,25 +191,26 @@ export function CVLightbox({ item, index, total, onClose, onPrev, onNext }: CVLi
           <div
             style={{
               display: "flex",
-              gap: "12px",
-              marginTop: "20px",
+              gap: "14px",
+              marginTop: "22px",
             }}
           >
             <button
               onClick={(e) => { e.stopPropagation(); onPrev(); }}
               disabled={index === 0}
               style={{
-                width: "36px",
-                height: "36px",
-                border: "1px solid var(--color-divider)",
+                width: "38px",
+                height: "38px",
+                border: "1px solid rgba(255, 255, 255, 0.2)",
                 borderRadius: "50%",
                 background: "none",
-                color: index === 0 ? "var(--color-divider)" : "var(--color-ink)",
+                color: index === 0 ? "rgba(255, 255, 255, 0.2)" : "rgba(255, 255, 255, 0.85)",
                 cursor: index === 0 ? "default" : "pointer",
                 fontSize: "14px",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
+                transition: "border-color 0.3s ease, color 0.3s ease",
               }}
             >
               ←
@@ -203,17 +219,18 @@ export function CVLightbox({ item, index, total, onClose, onPrev, onNext }: CVLi
               onClick={(e) => { e.stopPropagation(); onNext(); }}
               disabled={index === total - 1}
               style={{
-                width: "36px",
-                height: "36px",
-                border: "1px solid var(--color-divider)",
+                width: "38px",
+                height: "38px",
+                border: "1px solid rgba(255, 255, 255, 0.2)",
                 borderRadius: "50%",
                 background: "none",
-                color: index === total - 1 ? "var(--color-divider)" : "var(--color-ink)",
+                color: index === total - 1 ? "rgba(255, 255, 255, 0.2)" : "rgba(255, 255, 255, 0.85)",
                 cursor: index === total - 1 ? "default" : "pointer",
                 fontSize: "14px",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
+                transition: "border-color 0.3s ease, color 0.3s ease",
               }}
             >
               →
@@ -224,12 +241,12 @@ export function CVLightbox({ item, index, total, onClose, onPrev, onNext }: CVLi
         {/* Close hint */}
         <p
           style={{
-            fontSize: "10px",
+            fontSize: "9px",
             fontWeight: 500,
-            color: "var(--color-secondary)",
-            letterSpacing: "0.1em",
+            color: "rgba(255, 255, 255, 0.35)",
+            letterSpacing: "0.2em",
             textTransform: "uppercase",
-            marginTop: "20px",
+            marginTop: "22px",
           }}
         >
           Tap anywhere to close

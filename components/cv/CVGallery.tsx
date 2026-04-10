@@ -130,9 +130,10 @@ export function CVGallery({ pieces }: CVGalleryProps) {
             <button
               key={piece.title}
               onClick={() => openLightbox(i)}
+              className="gallery-card"
               style={{
                 flex: "0 0 auto",
-                width: "220px",
+                width: "280px",
                 border: "none",
                 background: "none",
                 padding: 0,
@@ -143,11 +144,10 @@ export function CVGallery({ pieces }: CVGalleryProps) {
               {/* Thumbnail */}
               <div
                 style={{
-                  width: "220px",
-                  height: "260px",
+                  width: "280px",
+                  height: "360px",
                   position: "relative",
                   overflow: "hidden",
-                  borderRadius: "3px",
                   backgroundColor: "var(--color-canvas)",
                 }}
               >
@@ -155,13 +155,10 @@ export function CVGallery({ pieces }: CVGalleryProps) {
                   src={piece.image}
                   alt={piece.title}
                   fill
-                  sizes="220px"
-                  style={{ objectFit: "cover", transition: "transform 0.4s ease" }}
-                  onMouseEnter={(e) => {
-                    (e.target as HTMLElement).style.transform = "scale(1.04)";
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.target as HTMLElement).style.transform = "scale(1)";
+                  sizes="280px"
+                  style={{
+                    objectFit: "cover",
+                    transition: "transform 1.2s cubic-bezier(0.2, 0.8, 0.2, 1)",
                   }}
                 />
               </div>
@@ -171,20 +168,24 @@ export function CVGallery({ pieces }: CVGalleryProps) {
                 style={{
                   fontSize: "12.5px",
                   color: "var(--color-ink)",
-                  marginTop: "8px",
+                  marginTop: "10px",
+                  opacity: 0.75,
+                  transition: "opacity 0.6s ease",
                 }}
               >
                 {piece.title}
               </p>
               <p
                 style={{
-                  fontSize: "10.5px",
+                  fontSize: "10px",
                   fontWeight: 400,
                   color: "var(--color-secondary)",
                   marginTop: "2px",
+                  opacity: 0.55,
+                  transition: "opacity 0.6s ease",
                 }}
               >
-                {piece.medium}, {piece.dimensions}
+                {piece.year}
               </p>
             </button>
           ))}
@@ -193,16 +194,17 @@ export function CVGallery({ pieces }: CVGalleryProps) {
         {/* Scroll hint */}
         <p
           style={{
-            fontSize: "9.5px",
+            fontSize: "9px",
             fontWeight: 500,
             color: "var(--color-divider)",
-            letterSpacing: "0.15em",
+            letterSpacing: "0.2em",
             textTransform: "uppercase",
-            marginTop: "12px",
+            marginTop: "20px",
             textAlign: "center",
+            opacity: 0.7,
           }}
         >
-          Drag to browse
+          Drag · click to enlarge
         </p>
       </section>
 
