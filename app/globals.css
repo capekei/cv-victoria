@@ -13,12 +13,12 @@
   --color-accent-light: #EDF3FB;
 }
 
-/* ===== Fixed Viewport — no body scroll ===== */
+/* Body scroll is page-controlled. The CV home pins its shell via
+   position:fixed, so no body scroll is needed there. The contact page
+   needs native body scroll, so we must NOT lock html/body globally. */
 html, body {
   margin: 0;
   padding: 0;
-  height: 100%;
-  overflow: hidden;
   background-color: var(--color-canvas);
   color: var(--color-ink);
   overscroll-behavior: none;
@@ -328,6 +328,51 @@ a, button, .hover-underline, .img-zoom-container, .portrait-zoom-container {
   .cv-shell-container {
     flex-direction: column !important;
   }
+}
+
+/* ===== Contact Page ===== */
+
+/* Scroll indicator pulse */
+@keyframes contact-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+/* Submit spinner */
+@keyframes contact-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Submit button hover — letter-spacing breathe + accent bg */
+.contact-submit-btn:hover {
+  background: var(--color-accent) !important;
+}
+.contact-submit-btn:hover span {
+  letter-spacing: 0.2em !important;
+  color: var(--color-ink) !important;
+}
+
+/* Contact quote: line break after "begins" on mobile */
+.contact-quote-break {
+  display: none;
+}
+@media (max-width: 767px) {
+  .contact-quote-break {
+    display: block;
+  }
+}
+
+/* Phase 4 "Return to the work" link — arrow nudges left on hover,
+   matching the gesture of the signature sweep above it. */
+.signature-return:hover .signature-return-arrow {
+  transform: translateX(-4px);
+}
+
+/* Home-page "Begin a conversation" CTA — arrow nudges right on hover,
+   mirroring the "Return to the work" arrow on the thank-you page. The
+   two arrows face each other across the one-click navigation. */
+.home-contact-cta:hover .home-contact-cta-arrow {
+  transform: translateX(4px);
 }
 
 /* ===== Print ===== */
