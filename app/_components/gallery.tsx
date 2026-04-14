@@ -5,6 +5,7 @@ import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Image from "next/image";
 import type { GalleryPiece } from "@/app/artist";
+import { resolveScroller } from "@/app/_lib/scroll";
 import { SectionLabel } from "./section-label";
 import { Lightbox } from "./lightbox";
 
@@ -24,7 +25,7 @@ export function Gallery({ pieces }: GalleryProps) {
     const el = sectionRef.current;
     if (!el) return;
 
-    const scroller = el.closest(".cv-scroll");
+    const scroller = resolveScroller(el);
     if (!scroller) return;
 
     gsap.set(el, { opacity: 0, y: 14 });

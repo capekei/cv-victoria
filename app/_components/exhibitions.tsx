@@ -4,6 +4,7 @@ import { useRef, useEffect } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import type { Exhibition } from "@/app/artist";
+import { resolveScroller } from "@/app/_lib/scroll";
 import { SectionLabel } from "./section-label";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -19,7 +20,7 @@ export function Exhibitions({ exhibitions }: ExhibitionsProps) {
     const el = ref.current;
     if (!el) return;
 
-    const scroller = el.closest(".cv-scroll");
+    const scroller = resolveScroller(el);
     if (!scroller) return;
 
     const rows = el.querySelectorAll(".cv-exh-row");

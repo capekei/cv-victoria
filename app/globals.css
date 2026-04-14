@@ -24,29 +24,18 @@ html, body {
   overscroll-behavior: none;
 }
 
-/* ===== Outer Shell ===== */
-.cv-shell {
+/* ===== Outer Shell Container (Shell component) =====
+   On desktop the shell pins to the viewport and an inner container
+   scrolls via Lenis. On mobile we unpin it so the browser's native
+   document scroll takes over — that's the only way to get
+   platform-correct momentum, rubberband, and address-bar show/hide. */
+.cv-shell-container {
   position: fixed;
   inset: 0;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 28px;
-}
-
-/* ===== Main Card — split layout ===== */
-.cv-card {
-  width: 100%;
-  max-width: 1060px;
-  height: calc(100vh - 56px);
   background-color: var(--color-cream);
-  border-radius: 5px;
-  box-shadow:
-    0 0 0 1px rgba(0,0,0,0.02),
-    0 20px 60px rgba(0,0,0,0.06);
-  display: flex;
   overflow: hidden;
-  position: relative;
+  overscroll-behavior: none;
 }
 
 /* ===== Left: Identity Panel (static) ===== */
@@ -68,6 +57,7 @@ html, body {
   flex-direction: column;
   overflow: hidden;
   position: relative;
+  min-width: 0;
 }
 
 /* ===== Scroll Container ===== */
@@ -75,9 +65,15 @@ html, body {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  scroll-behavior: smooth;
-  padding: 52px 52px 40px;
+  padding: 64px 56px 56px;
+  min-width: 0;
   overscroll-behavior: contain;
+}
+
+.cv-scroll-content {
+  max-width: 800px;
+  margin: 0 auto;
+  width: 100%;
 }
 
 /* Thin elegant scrollbar */
@@ -113,7 +109,7 @@ html, body {
   background: linear-gradient(90deg, var(--color-accent), #8BB8E8);
   border-radius: 0 1px 1px 0;
   will-change: width;
-  transition: width 0.12s ease-out;
+  transition: width 0.06s linear;
 }
 
 /* ===== Section Spacing ===== */
@@ -317,16 +313,41 @@ a, button, .hover-underline, .img-zoom-container, .portrait-zoom-container {
   .cv-id-contact {
     display: none !important;
   }
+  /* ── Mobile scroll model ──
+     Unpin the shell so the browser's native document scroll takes over.
+     The inner .cv-scroll-panel / .cv-scroll stop being flex/overflow
+     containers and flow inline, so everything scrolls as one page. */
+  .cv-shell-container {
+    position: static !important;
+    inset: auto !important;
+    overflow: visible !important;
+    overscroll-behavior: auto !important;
+    flex-direction: column !important;
+    min-height: 100dvh;
+  }
+  .cv-scroll-panel {
+    flex: none !important;
+    display: block !important;
+    overflow: visible !important;
+  }
   .cv-scroll {
+    flex: none !important;
+    overflow: visible !important;
+    overscroll-behavior: auto !important;
     padding: 28px !important;
+  }
+  /* Pin the progress bar to the viewport top so it still tracks
+     document scroll after the shell is unpinned. */
+  .cv-progress {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
   }
   .cv-artwork-frame {
     margin-left: -28px;
     margin-right: -28px;
-  }
-  /* Ensure the shell stacks vertically on mobile */
-  .cv-shell-container {
-    flex-direction: column !important;
   }
 }
 

@@ -26,15 +26,42 @@ export function ScrollPanel({ children }: ScrollPanelProps) {
     const content = contentRef.current;
     if (!wrapper || !content) return;
 
-    setScrollEl(wrapper);
-
     /* ── Reset scroll position on mount ── */
     if (typeof history !== "undefined") {
       history.scrollRestoration = "manual";
     }
+
+    /* ── Mobile: let the browser drive scroll natively. Lenis on touch
+          devices feels off (momentum, rubberbanding, pinch-zoom) and our
+          inner-container layout makes it worse. On mobile the whole
+          document scrolls; we just track window.scrollY for the progress
+          bar and let ScrollTrigger use its window default. ── */
+    const mobileQuery = window.matchMedia("(max-width: 768px)");
+
+    if (mobileQuery.matches) {
+      setScrollEl(null);
+      window.scrollTo(0, 0);
+
+      const onScroll = () => {
+        const limit =
+          document.documentElement.scrollHeight - window.innerHeight;
+        setProgress(limit > 0 ? window.scrollY / limit : 0);
+        ScrollTrigger.update();
+      };
+
+      window.addEventListener("scroll", onScroll, { passive: true });
+      onScroll();
+
+      return () => {
+        window.removeEventListener("scroll", onScroll);
+        ScrollTrigger.getAll().forEach((t) => t.kill());
+      };
+    }
+
+    /* ── Desktop: Lenis smooth scroll on the internal container ── */
+    setScrollEl(wrapper);
     wrapper.scrollTop = 0;
 
-    /* ── Lenis: smooth momentum scroll on the internal container ── */
     const lenis = new Lenis({
       wrapper,
       content,
@@ -68,52 +95,18 @@ export function ScrollPanel({ children }: ScrollPanelProps) {
 
   return (
     <ScrollContext.Provider value={scrollEl}>
-      <div
-        style={{
-          flex: 1,
-          display: "flex",
-          flexDirection: "column",
-          overflow: "hidden",
-          position: "relative",
-          minWidth: 0,
-        }}
-      >
+      <div className="cv-scroll-panel">
         {/* Progress bar */}
-        <div
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            height: "2px",
-            zIndex: 10,
-          }}
-        >
+        <div className="cv-progress">
           <div
-            style={{
-              height: "100%",
-              width: `${progress * 100}%`,
-              background: "linear-gradient(90deg, var(--color-accent), #8BB8E8)",
-              borderRadius: "0 1px 1px 0",
-              transition: "width 0.06s linear",
-            }}
+            className="cv-progress-bar"
+            style={{ width: `${progress * 100}%` }}
           />
         </div>
 
-        {/* Scroll wrapper — Lenis attaches here */}
-        <div
-          ref={wrapperRef}
-          className="cv-scroll"
-          style={{
-            flex: 1,
-            overflowY: "auto",
-            overflowX: "hidden",
-            padding: "64px 56px 56px",
-            minWidth: 0,
-            overscrollBehavior: "contain",
-          }}
-        >
-          <div ref={contentRef} style={{ maxWidth: "800px", margin: "0 auto", width: "100%" }}>
+        {/* Scroll wrapper — Lenis attaches here on desktop */}
+        <div ref={wrapperRef} className="cv-scroll">
+          <div ref={contentRef} className="cv-scroll-content">
             {children}
           </div>
         </div>

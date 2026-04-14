@@ -4,6 +4,7 @@ import { useRef, useEffect, useState, useCallback } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import type { ProcessStep } from "@/app/artist";
+import { resolveScroller } from "@/app/_lib/scroll";
 import { SectionLabel } from "./section-label";
 import { Lightbox } from "./lightbox";
 import { ProcessMedia } from "./process-media";
@@ -22,7 +23,7 @@ export function Process({ steps }: ProcessProps) {
     const el = ref.current;
     if (!el) return;
 
-    const scroller = el.closest(".cv-scroll");
+    const scroller = resolveScroller(el);
     if (!scroller) return;
 
     const items = el.querySelectorAll(".cv-process-item");

@@ -3,6 +3,7 @@
 import { useRef, useEffect } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { resolveScroller } from "@/app/_lib/scroll";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -18,8 +19,8 @@ export function Reveal({ children, delay = 0 }: RevealProps) {
     const el = ref.current;
     if (!el) return;
 
-    /* Find the Lenis scroll wrapper */
-    const scroller = el.closest(".cv-scroll");
+    /* Resolve scroller: .cv-scroll on desktop, window on mobile */
+    const scroller = resolveScroller(el);
     if (!scroller) return;
 
     gsap.set(el, { opacity: 0, y: 14 });
