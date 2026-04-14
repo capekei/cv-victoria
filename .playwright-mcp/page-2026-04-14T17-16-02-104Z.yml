@@ -1,0 +1,35 @@
+- generic [active] [ref=e1]:
+  - heading "Contact Victoria Zeder" [level=1] [ref=e2]
+  - generic [ref=e3]:
+    - button "Pause background video" [ref=e5] [cursor=pointer]: Pause
+    - generic [ref=e6]:
+      - paragraph [ref=e7]: Every painting begins with a conversation.
+      - generic [ref=e9]: Scroll
+    - generic:
+      - generic:
+        - generic: Commissions
+        - img
+      - generic:
+        - generic: Exhibitions
+        - img
+      - generic:
+        - generic: Collaborations
+        - img
+    - generic [ref=e24]:
+      - generic [ref=e25]:
+        - text: Website
+        - textbox [ref=e26]
+      - generic [ref=e27]:
+        - generic [ref=e28]: Your name
+        - textbox "Your name" [ref=e29]
+      - generic [ref=e30]:
+        - generic [ref=e31]: Your email
+        - textbox "Your email" [ref=e32]
+      - generic [ref=e33]:
+        - generic [ref=e34]: What brings you here?
+        - textbox "What brings you here?" [ref=e35]
+      - button "Submit contact form" [ref=e37] [cursor=pointer]:
+        - generic [ref=e38]: Begin
+  - button "Open Next.js Dev Tools" [ref=e17] [cursor=pointer]:
+    - img [ref=e18]
+  - alert [ref=e21]
