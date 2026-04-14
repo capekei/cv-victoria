@@ -13,17 +13,18 @@ export default function AppleIcon() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          backgroundColor: "#2c2c2c",
-          borderRadius: "22px",
+          backgroundColor: "#111111",
+          borderRadius: "36px",
         }}
       >
         <span
           style={{
-            fontSize: "90px",
+            fontSize: "110px",
             fontFamily: "Georgia, serif",
-            fontWeight: 700,
-            color: "#f7f6f2",
-            letterSpacing: "-2px",
+            fontWeight: 900,
+            fontStyle: "italic",
+            color: "#F7F6F2",
+            letterSpacing: "-4px",
           }}
         >
           VZ
