@@ -101,26 +101,44 @@ export function Exhibitions({ exhibitions }: ExhibitionsProps) {
 }
 
 function ExhibitionRow({ exhibition }: { exhibition: Exhibition }) {
+  const title = exhibition.url ? (
+    <a
+      href={exhibition.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="hover-underline"
+      style={{
+        fontSize: "13px",
+        fontWeight: 500,
+        color: "inherit",
+        textDecoration: "none",
+      }}
+    >
+      {exhibition.title}
+    </a>
+  ) : (
+    <span style={{ fontSize: "13px", fontWeight: 500 }}>
+      {exhibition.title}
+    </span>
+  );
+
   return (
     <div
       className="cv-exh-row"
       style={{
         width: "100%",
-        cursor: "pointer",
+        cursor: exhibition.url ? "pointer" : "default",
         marginBottom: "2px",
       }}
     >
       <div
-        className="hover-underline"
         style={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "baseline",
         }}
       >
-        <span className="text-ink" style={{ fontSize: "13px", fontWeight: 500 }}>
-          {exhibition.title}
-        </span>
+        {title}
         <span
           style={{
             fontSize: "11px",
