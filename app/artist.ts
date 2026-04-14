@@ -71,14 +71,14 @@ export const victoriaZeder: ArtistCV = {
       location: "Southampton, NY",
       type: "upcoming",
       dates: "July 9–12",
-      url: "https://hamptonsfineart.com",
+      url: "https://hamptonsfineartfair.com",
     },
     {
       year: 2026,
       title: "Red Dot Miami",
       location: "Miami, FL",
       type: "upcoming",
-      url: "https://redartfairs.com",
+      url: "https://redwoodartgroup.com",
     },
     {
       year: 2026,
@@ -86,7 +86,6 @@ export const victoriaZeder: ArtistCV = {
       location: "Miami, FL",
       type: "selected",
       gallery: "Artwork on display",
-      url: "https://scavolini.com",
     },
     {
       year: 2025,
@@ -94,7 +93,7 @@ export const victoriaZeder: ArtistCV = {
       location: "Coral Gables, FL",
       type: "selected",
       gallery: "42nd Annual",
-      url: "https://rivieracountryclub.com",
+      url: "https://www.rivieracc.com/artshow",
     },
   ],
   gallery: [
