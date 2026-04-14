@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRef, useEffect, useState, useCallback } from "react";
 import { gsap } from "gsap";
 import { VideoBackground } from "./VideoBackground";
@@ -99,16 +100,15 @@ export function ContactExperience() {
     if (isDesktop) {
       /* ========== DESKTOP: manual pin + raw scroll listener ========== */
       const vh = window.innerHeight;
-      /* Extended pin distance: 5vh total. Gives breathing room between
-         Phase 2 fade-out, the video color transition (pure dead zone),
-         and the form rise. Target timeline:
-           0   → 1vh    Phase 1 (quote)
-           1vh → 2.5vh  Phase 2 (three words stagger + fade)
-           2.5vh→ 3.5vh Video B&W → color (ONLY — no form yet)
-           3.5vh→ 3.75vh Dead-zone gap (video settled, form still hidden)
-           3.75vh→ 4.75vh Form rises (opacity + translateY + blur)
-           4.75vh→ 5vh  Form at rest */
-      const pinDistance = 5 * vh; // total scroll distance while pinned
+      /* Slower timeline: 7vh total, with each phase stretched proportionally.
+         Target timeline:
+           0    → 1.4vh  Phase 1 (quote)
+           1.4  → 3.5vh  Phase 2 (three words stagger + fade)
+           3.5  → 4.9vh  Video B&W → color (ONLY — no form yet)
+           4.9  → 5.25vh Dead-zone gap (video settled, form still hidden)
+           5.25 → 6.65vh Form rises (opacity + translateY + blur)
+           6.65 → 7vh    Form at rest */
+      const pinDistance = 7 * vh; // total scroll distance while pinned
 
       /* Spacer must be pinDistance + vh so the last phase fully reveals.
          The section is position:fixed during pin (0 height in flow), so
@@ -153,6 +153,9 @@ export function ContactExperience() {
       const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
       /* power2.out easing (matches GSAP's ease: "power2.out") */
       const easeOut2 = (t: number) => 1 - (1 - t) * (1 - t);
+      /* power2.inOut easing for softer fade transitions */
+      const easeInOut2 = (t: number) =>
+        t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 
       /* ── Scroll smoothing (emulates GSAP scrub: 1.5) ──
          Raw scroll drives the pin instantly (no jitter), while a
@@ -164,8 +167,8 @@ export function ContactExperience() {
 
       /* Phase-animation driver — reads smoothScroll, not raw scroll */
       const renderPhases = (scroll: number) => {
-        /* ── Phase 1: fade out over 0→vh (unchanged) ── */
-        const p1 = clamp01(scroll / vh);
+        /* ── Phase 1: fade out over 0→1.4vh ── */
+        const p1 = clamp01(scroll / (1.4 * vh));
         if (scrollIndicatorRef.current) {
           scrollIndicatorRef.current.style.opacity = String(1 - clamp01(p1 / 0.6));
         }
@@ -173,14 +176,20 @@ export function ContactExperience() {
           phase1Ref.current.style.opacity = String(1 - clamp01((p1 - 0.2) / 0.8));
         }
 
-        /* ── Phase 2: words stagger in from vh→2.5vh, fade out at end (unchanged) ── */
-        const p2Raw = (scroll - vh) / (1.5 * vh);
+        /* ── Phase 2: words stagger in from 1.4vh→3.5vh, fade out at end ── */
+        const p2Raw = (scroll - 1.4 * vh) / (2.1 * vh);
         WORDS.forEach((word, i) => {
           const wordEl = wordRefs.current[i];
           const lineEl = underlineRefs.current[i];
-          const wordStart = i * 0.3;
-          const wordProgress = clamp01((p2Raw - wordStart) / 0.25);
-          const fadeOut = clamp01((p2Raw - 0.9) / 0.1);
+          /* Per-word timing so the last word doesn't feel rushed. */
+          const isLastWord = i === WORDS.length - 1;
+          const wordStart = isLastWord ? 0.52 : i * 0.3;
+          const revealDuration = isLastWord ? 0.28 : 0.25;
+          const wordProgress = clamp01((p2Raw - wordStart) / revealDuration);
+          const fadeOutStart = isLastWord ? 0.97 : 0.88;
+          const fadeOutDuration = isLastWord ? 0.16 : 0.12;
+          const rawFadeOut = clamp01((p2Raw - fadeOutStart) / fadeOutDuration);
+          const fadeOut = isLastWord ? easeInOut2(rawFadeOut) : rawFadeOut;
 
           if (wordEl) {
             const show = wordProgress * word.opacity;
@@ -194,8 +203,8 @@ export function ContactExperience() {
           }
         });
 
-        /* ── Phase 3a: video B&W → color ONLY, from 2.5vh → 3.5vh ── */
-        const pVideo = clamp01((scroll - 2.5 * vh) / vh);
+        /* ── Phase 3a: video B&W → color ONLY, from 3.5vh → 4.9vh ── */
+        const pVideo = clamp01((scroll - 3.5 * vh) / (1.4 * vh));
         const videoTarget = videoSection.querySelector("video");
         if (videoTarget) {
           const gs = 1 - pVideo;
@@ -203,10 +212,10 @@ export function ContactExperience() {
           videoTarget.style.filter = `grayscale(${gs}) brightness(${br})`;
         }
 
-        /* ── Phase 3b: form rises from 3.75vh → 4.75vh ──
-           Deliberate 0.25vh dead-zone between end of video transition
+        /* ── Phase 3b: form rises from 5.25vh → 6.65vh ──
+           Deliberate 0.35vh dead-zone between end of video transition
            and start of form entry — visitor sees ONLY the color video. */
-        const pForm = clamp01((scroll - 3.75 * vh) / vh);
+        const pForm = clamp01((scroll - 5.25 * vh) / (1.4 * vh));
         const eased = easeOut2(pForm);
         if (phase3Ref.current) {
           phase3Ref.current.style.opacity = String(eased);
@@ -348,6 +357,28 @@ export function ContactExperience() {
         <VideoBackground onVideoRef={setVideoEl} />
         <GrainOverlay blendMode="overlay" />
         <PauseButton videoEl={videoEl} />
+        <Link
+          href="/"
+          aria-label="Return to homepage"
+          style={{
+            position: "absolute",
+            top: "max(18px, env(safe-area-inset-top))",
+            left: "max(18px, env(safe-area-inset-left))",
+            zIndex: 12,
+            color: "rgba(255,255,255,0.9)",
+            textDecoration: "none",
+            fontSize: "13px",
+            letterSpacing: "0.04em",
+            textTransform: "uppercase",
+            padding: "8px 12px",
+            border: "1px solid rgba(255,255,255,0.35)",
+            borderRadius: "999px",
+            backdropFilter: "blur(6px)",
+            background: "rgba(0,0,0,0.25)",
+          }}
+        >
+          Return home
+        </Link>
 
         {/* ── Phase 1: The Opening ── */}
         <div
