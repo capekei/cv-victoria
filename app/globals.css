@@ -368,6 +368,16 @@ a, button, .hover-underline, .img-zoom-container, .portrait-zoom-container {
   transform: translateX(-4px);
 }
 
+/* /contact entry "Return to the work" link — mirror of Phase 4's exit link
+   so the visitor reads one continuous gesture across the whole experience.
+   Same arrow, same nudge, same voice. */
+.contact-return:hover .contact-return-arrow {
+  transform: translateX(-4px);
+}
+.contact-return:hover {
+  color: rgba(255, 255, 255, 1) !important;
+}
+
 /* Home-page "Begin a conversation" CTA — arrow nudges right on hover,
    mirroring the "Return to the work" arrow on the thank-you page. The
    two arrows face each other across the one-click navigation. */
