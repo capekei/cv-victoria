@@ -139,10 +139,12 @@ export function Postscript({ active }: PostscriptProps) {
   return (
     <div
       style={{
-        width: "min(680px, calc(100vw - 32px))",
-        /* Padding floor tightened so 320px viewports leave enough width
-           for the daughter video (848:480 aspect) to read legibly. */
-        padding: "clamp(20px, 4vw, 44px) clamp(18px, 3.5vw, 36px)",
+        /* Exact match with the ContactForm card (min 420px, 48px viewport
+           gap, 36×28 padding) so the Phase 3 → Phase 4 swap reads as the
+           same card changing its contents — not a new, bigger card
+           appearing. This is the heart of the continuous-scroll illusion. */
+        width: "min(420px, calc(100vw - 48px))",
+        padding: "36px 28px",
         background: "rgba(247, 246, 242, 0.88)",
         backdropFilter: "blur(20px)",
         WebkitBackdropFilter: "blur(20px)",
@@ -150,19 +152,21 @@ export function Postscript({ active }: PostscriptProps) {
         boxShadow: "0 20px 60px rgba(0,0,0,0.15)",
       }}
     >
-      {/* Phrase */}
+      {/* Phrase — scaled to fit the 420px-wide card's content area.
+          Matches the "mi mejor creación." beat visually: same font
+          weight as the italic invitation on the home page CTA. */}
       <p
         ref={phraseRef}
         className="font-serif"
         style={{
           fontStyle: "italic",
           fontWeight: 400,
-          fontSize: "clamp(22px, 2.6vw, 28px)",
+          fontSize: "clamp(20px, 5.2vw, 26px)",
           lineHeight: 1.4,
           color: "var(--color-ink)",
           textAlign: "center",
           letterSpacing: "-0.005em",
-          marginBottom: "clamp(22px, 3vh, 32px)",
+          marginBottom: "clamp(18px, 2.6vh, 28px)",
         }}
       >
         {PHRASE_WORDS.map((word, i) => (
@@ -197,7 +201,10 @@ export function Postscript({ active }: PostscriptProps) {
           src={POSTER}
           alt="Victoria with her daughter"
           fill
-          sizes="(max-width: 680px) calc(100vw - 48px), 680px"
+          /* Card width is min(420, 100vw - 48); content width subtracts
+             56px of padding. Below 468px viewport, card hits the gap
+             limit, so video width = 100vw - 104. Above, fixed at 364. */
+          sizes="(max-width: 468px) calc(100vw - 104px), 364px"
           style={{ objectFit: "cover" }}
           priority={false}
         />
