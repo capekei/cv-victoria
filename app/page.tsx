@@ -42,13 +42,19 @@ export default function Page() {
           </Reveal>
 
           {/* 2. The work */}
-          <Gallery pieces={cv.gallery} />
+          <Reveal>
+            <Gallery pieces={cv.gallery} />
+          </Reveal>
 
-          {/* 3. How it's made */}
-          <Process steps={cv.process} />
+          {/* 3. How it's made — staggered vertical cascade of process steps */}
+          <Reveal stagger className="cv-stagger-y">
+            <Process steps={cv.process} />
+          </Reveal>
 
-          {/* 4. Where it's shown */}
-          <Exhibitions exhibitions={cv.exhibitions} />
+          {/* 4. Where it's shown — horizontal stagger across upcoming + selected */}
+          <Reveal stagger>
+            <Exhibitions exhibitions={cv.exhibitions} />
+          </Reveal>
 
           {/* 5. Credentials */}
           <Reveal>

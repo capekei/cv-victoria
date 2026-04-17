@@ -1,54 +1,20 @@
-"use client";
-
-import { useRef, useEffect } from "react";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import type { Exhibition } from "@/app/artist";
 import { SectionLabel } from "./section-label";
-
-gsap.registerPlugin(ScrollTrigger);
 
 interface ExhibitionsProps {
   exhibitions: Exhibition[];
 }
 
 export function Exhibitions({ exhibitions }: ExhibitionsProps) {
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-
-    const scroller = el.closest(".cv-scroll");
-    if (!scroller) return;
-
-    const rows = el.querySelectorAll(".cv-exh-row");
-    gsap.set(rows, { opacity: 0, x: -6 });
-
-    ScrollTrigger.create({
-      trigger: el,
-      scroller,
-      start: "top 88%",
-      once: true,
-      onEnter: () => {
-        gsap.to(rows, {
-          opacity: 1,
-          x: 0,
-          duration: 0.45,
-          stagger: 0.06,
-          ease: "power2.out",
-        });
-      },
-    });
-
-    return () => ScrollTrigger.getAll().forEach((t) => t.kill());
-  }, []);
-
   const upcoming = exhibitions.filter((e) => e.type === "upcoming");
   const selected = exhibitions.filter((e) => e.type === "selected");
 
+  /* Continuous stagger index across both groups so the reveal reads as
+     one gesture (upcoming → selected), not two separate sequences. */
+  let staggerIndex = 0;
+
   return (
-    <section ref={ref} style={{ marginBottom: "40px" }}>
+    <section style={{ marginBottom: "40px" }}>
       <SectionLabel title="Exhibitions" />
 
       {upcoming.length > 0 && (
@@ -68,7 +34,11 @@ export function Exhibitions({ exhibitions }: ExhibitionsProps) {
           </span>
           <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
             {upcoming.map((e) => (
-              <ExhibitionRow key={`${e.year}-${e.title}`} exhibition={e} />
+              <ExhibitionRow
+                key={`${e.year}-${e.title}`}
+                exhibition={e}
+                index={staggerIndex++}
+              />
             ))}
           </div>
         </div>
@@ -91,7 +61,11 @@ export function Exhibitions({ exhibitions }: ExhibitionsProps) {
           </span>
           <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
             {selected.map((e) => (
-              <ExhibitionRow key={`${e.year}-${e.title}`} exhibition={e} />
+              <ExhibitionRow
+                key={`${e.year}-${e.title}`}
+                exhibition={e}
+                index={staggerIndex++}
+              />
             ))}
           </div>
         </div>
@@ -100,7 +74,13 @@ export function Exhibitions({ exhibitions }: ExhibitionsProps) {
   );
 }
 
-function ExhibitionRow({ exhibition }: { exhibition: Exhibition }) {
+function ExhibitionRow({
+  exhibition,
+  index,
+}: {
+  exhibition: Exhibition;
+  index: number;
+}) {
   const title = exhibition.url ? (
     <a
       href={exhibition.url}
@@ -124,12 +104,13 @@ function ExhibitionRow({ exhibition }: { exhibition: Exhibition }) {
 
   return (
     <div
-      className="cv-exh-row"
+      className="cv-stagger-item"
       style={{
         width: "100%",
         cursor: exhibition.url ? "pointer" : "default",
         marginBottom: "2px",
-      }}
+        ["--stagger-i" as string]: index,
+      } as React.CSSProperties}
     >
       <div
         style={{

@@ -11,6 +11,7 @@ interface ContactFormProps {
 
 export function ContactForm({ onSuccess }: ContactFormProps) {
   const [submitting, setSubmitting] = useState(false);
+  const [sent, setSent] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   /* Honeypot input — bots fill hidden fields, humans never touch them.
      Kept outside react-hook-form so it doesn't pollute the typed data. */
@@ -39,7 +40,14 @@ export function ContactForm({ onSuccess }: ContactFormProps) {
         }),
       });
       if (res.ok) {
-        onSuccess();
+        /* Flash an inline "Sent" confirmation before the Phase 4 overlay
+           covers the form. Screen readers announce it via aria-live, and
+           sighted users get immediate feedback even if the clip-path
+           transition is delayed by a slow CPU. */
+        setSent(true);
+        setSubmitting(false);
+        /* Small beat so the confirmation is perceivable, then hand off. */
+        window.setTimeout(onSuccess, 350);
       } else {
         const payload = (await res.json().catch(() => null)) as
           | { error?: string }
@@ -111,6 +119,11 @@ export function ContactForm({ onSuccess }: ContactFormProps) {
         boxShadow: "0 20px 60px rgba(0,0,0,0.15)",
       }}
     >
+      {/* react-hook-form's handleSubmit returns a ref-safe submit handler;
+          the ref inside onSubmit is read only when the form is submitted,
+          never during render. The lint rule's heuristic can't see past the
+          wrapper function, so suppress it for this specific call site. */}
+      {/* eslint-disable-next-line react-hooks/refs */}
       <form onSubmit={handleSubmit(onSubmit)} noValidate>
         {/* Honeypot — hidden from humans, irresistible to bots.
             Positioned off-screen rather than display:none because
@@ -214,7 +227,7 @@ export function ContactForm({ onSuccess }: ContactFormProps) {
         <div style={{ textAlign: "center" }}>
           <button
             type="submit"
-            disabled={submitting}
+            disabled={submitting || sent}
             aria-label="Submit contact form"
             className="contact-submit-btn"
             style={{
@@ -225,7 +238,7 @@ export function ContactForm({ onSuccess }: ContactFormProps) {
               background: "var(--color-ink)",
               border: "none",
               borderRadius: 0,
-              cursor: submitting ? "wait" : "pointer",
+              cursor: submitting ? "wait" : sent ? "default" : "pointer",
               minWidth: "140px",
               minHeight: "44px",
               transition:
@@ -256,10 +269,30 @@ export function ContactForm({ onSuccess }: ContactFormProps) {
                   color: "var(--color-cream)",
                 }}
               >
-                Begin
+                {sent ? "Sent" : "Begin"}
               </span>
             )}
           </button>
+          {/* Inline success flash — visible for ~350ms before Phase 4 takes
+              over. aria-live="polite" announces it to screen readers. */}
+          <p
+            role="status"
+            aria-live="polite"
+            style={{
+              fontFamily: "var(--font-montserrat)",
+              fontSize: "11px",
+              fontWeight: 500,
+              letterSpacing: "0.18em",
+              textTransform: "uppercase",
+              color: "var(--color-secondary)",
+              marginTop: "14px",
+              minHeight: "1em",
+              opacity: sent ? 1 : 0,
+              transition: "opacity 0.25s ease-out",
+            }}
+          >
+            {sent ? "Message sent" : ""}
+          </p>
           {serverError && (
             <p role="alert" aria-live="assertive" style={{ ...errorStyle, marginTop: "12px" }}>
               {serverError}

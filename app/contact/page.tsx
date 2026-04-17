@@ -14,9 +14,9 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/victoria-portrait.png",
-        width: 1728,
-        height: 2304,
+        url: "/victoria-portrait-og.jpg",
+        width: 1200,
+        height: 630,
         alt: "Victoria Zeder, visual artist",
       },
     ],
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Contact Victoria Zeder",
     description: "Every painting begins with a conversation.",
-    images: ["/victoria-portrait.png"],
+    images: ["/victoria-portrait-og.jpg"],
   },
 };
 

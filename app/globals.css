@@ -11,6 +11,29 @@
   --color-divider: #CFCFCF;
   --color-accent: #B9D4F4;
   --color-accent-light: #EDF3FB;
+
+  /* ── Type scale — single source of truth for sizes that were scattered
+     across inline styles (9.5, 10.5, 11.5, 12.5, 13, 15, 17, 38px).
+     Keeps editorial rhythm intentional, not accidental. */
+  --text-eyebrow: 9.5px;    /* uppercase section labels, tracking 0.2em */
+  --text-label: 10px;       /* h2 section heads, tracking 0.22em */
+  --text-caption: 10.5px;   /* ancillary meta */
+  --text-micro: 11px;       /* footer metadata */
+  --text-meta: 11.5px;      /* body meta */
+  --text-gallery: 12.5px;   /* gallery captions */
+  --text-body: 13px;        /* body */
+  --text-process: 13px;     /* process descriptions */
+  --text-input: 15px;       /* form inputs */
+  --text-statement: 17px;   /* lead statement */
+  --text-display: 38px;     /* identity name */
+
+  --line-tight: 1.05;
+  --line-snug: 1.5;
+  --line-body: 1.65;
+  --line-prose: 1.85;
+
+  --ease-editorial: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --ease-curtain: cubic-bezier(0.86, 0, 0.07, 1);
 }
 
 /* Body scroll is page-controlled. The CV home pins its shell via
@@ -271,8 +294,36 @@ a, button, .hover-underline, .img-zoom-container, .portrait-zoom-container {
   height: auto;
 }
 
-/* ===== Responsive: stack on small screens ===== */
-@media (max-width: 768px) {
+/* ===== Process grid on narrow viewports =====
+   Default grid is `140px 1fr`. At ≤479px the 140px thumbnail squeezes
+   the description column to ~94px, which wraps single words. Shrink to
+   92px thumbnails so each step still pairs image + prose legibly. */
+@media (max-width: 479px) {
+  .cv-process-item {
+    grid-template-columns: 92px 1fr !important;
+    gap: 12px !important;
+  }
+  .cv-process-item > button {
+    width: 92px !important;
+    height: 92px !important;
+  }
+}
+
+/* ===== Keep-scrolling hint visibility =====
+   On landscape phones (short viewports) the hint pushes past the Begin
+   button into the fold. Hide it there — the form is already filling
+   the frame, no encouragement needed. */
+@media (max-height: 559px) {
+  .cv-contact-hint {
+    display: none !important;
+  }
+}
+
+/* ===== Responsive: stack on small screens =====
+   Below 600px we drop the 380px identity sidebar and flow the header
+   as a row. Tablets in portrait (768×1024, iPad Mini at 744) keep the
+   desktop split because the sidebar still fits comfortably. */
+@media (max-width: 599px) {
   .cv-identity {
     width: 100% !important;
     min-width: 100% !important;
@@ -394,4 +445,152 @@ a, button, .hover-underline, .img-zoom-container, .portrait-zoom-container {
   .cv-scroll-panel { overflow: visible; }
   .cv-scroll { overflow: visible; padding: 18mm 22mm; }
   .cv-progress { display: none; }
+}
+
+/* ===== Skip link — first focusable element in the DOM.
+   Hidden until :focus, then anchors top-left over the shell. */
+.skip-link {
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  z-index: 100000;
+  padding: 10px 14px;
+  background: var(--color-ink);
+  color: var(--color-cream);
+  font-family: var(--font-sans);
+  font-size: var(--text-micro);
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border-radius: 3px;
+  transform: translateY(-200%);
+  transition: transform 0.2s ease-out;
+}
+.skip-link:focus,
+.skip-link:focus-visible {
+  transform: translateY(0);
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* ===== Focus ring — keyboard-only, skips mouse clicks ===== */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+/* Hide default outline on mouse clicks; :focus-visible covers keyboard */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* ===== Scroll-triggered reveal (CSS + IntersectionObserver).
+   Paired with <Reveal /> + <StaggerReveal /> in app/_components/reveal.tsx.
+   The client wrapper just toggles .is-visible once; the animation is
+   pure CSS so we don't pay GSAP's cost for a 14px fade-up. */
+.cv-reveal {
+  opacity: 0;
+  transform: translateY(14px);
+  transition:
+    opacity 0.65s var(--ease-editorial),
+    transform 0.65s var(--ease-editorial);
+  transition-delay: var(--reveal-delay, 0ms);
+  will-change: opacity, transform;
+}
+.cv-reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Stagger children inside a reveal container.
+   Each item carries `style={{ '--stagger-i': index }}` which drives the
+   transition-delay via calc(). Works regardless of nesting depth, so
+   Exhibitions can keep its Upcoming/Selected grouping. */
+.cv-stagger .cv-stagger-item {
+  opacity: 0;
+  transform: translateX(-6px);
+  transition:
+    opacity 0.45s var(--ease-editorial),
+    transform 0.45s var(--ease-editorial);
+  transition-delay: calc(var(--stagger-i, 0) * 60ms);
+  will-change: opacity, transform;
+}
+.cv-stagger.is-visible .cv-stagger-item {
+  opacity: 1;
+  transform: translateX(0);
+}
+/* Process items use a vertical stagger (y offset, longer cadence). */
+.cv-stagger.cv-stagger-y .cv-stagger-item {
+  transform: translateY(14px);
+  transition-delay: calc(var(--stagger-i, 0) * 100ms);
+  transition-duration: 0.6s;
+}
+.cv-stagger.cv-stagger-y.is-visible .cv-stagger-item {
+  transform: translateY(0);
+}
+
+/* ===== Gallery strip — edge mask + scroll-padding.
+   The right edge fades to cream so cards peek under, signaling "more".
+   The left edge inherits the bleed from cv-artwork-frame margins. */
+.gallery-strip {
+  scroll-padding-inline-end: 48px;
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 56px,
+    #000 calc(100% - 64px),
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 56px,
+    #000 calc(100% - 64px),
+    transparent 100%
+  );
+}
+/* When scrolled to the end, drop the right-edge fade so the last card is crisp */
+.gallery-strip.is-scrolled-end {
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 56px,
+    #000 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 56px,
+    #000 100%
+  );
+}
+.gallery-strip:focus-visible {
+  outline-offset: 4px;
+}
+/* Disable drag cursor when keyboard focus present; use-case friendly */
+.gallery-strip:focus-visible {
+  cursor: auto;
+}
+
+/* ===== Reduced motion — honor the user's OS preference.
+   Applies globally: reveals snap on immediately, transitions shortened,
+   GSAP timelines short-circuit in JS (see components). */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .cv-reveal,
+  .cv-stagger > .cv-stagger-item {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+  .gallery-strip {
+    mask-image: none !important;
+    -webkit-mask-image: none !important;
+  }
 }

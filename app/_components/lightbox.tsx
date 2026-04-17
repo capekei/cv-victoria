@@ -27,19 +27,34 @@ export function Lightbox({ item, index, total, onClose, onPrev, onNext }: Lightb
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
-  /* Reset active image + fullscreen when item changes */
-  useEffect(() => {
+  /* Reset active image + fullscreen when item changes.
+     React 19's recommended pattern for derived-from-props state: compare
+     during render and call setState — React batches into the same pass,
+     avoiding the cascading-render penalty that useEffect would incur. */
+  const [lastItem, setLastItem] = useState(item);
+  if (lastItem !== item) {
+    setLastItem(item);
     setActiveImageIndex(0);
     setIsFullscreen(false);
-  }, [item]);
+  }
 
   /* Animate in */
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)")
+      .matches;
+    const content = el.querySelector(".lb-content");
+    if (reduced) {
+      gsap.set(el, { opacity: 1 });
+      if (content) gsap.set(content, { opacity: 1, y: 0 });
+      return;
+    }
+
     gsap.fromTo(el, { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "power2.out" });
     gsap.fromTo(
-      el.querySelector(".lb-content"),
+      content,
       { y: 20, opacity: 0 },
       { y: 0, opacity: 1, duration: 0.4, delay: 0.1, ease: "power2.out" }
     );
@@ -78,6 +93,38 @@ export function Lightbox({ item, index, total, onClose, onPrev, onNext }: Lightb
         overflowY: "auto",
       }}
     >
+      <button
+        type="button"
+        aria-label="Close lightbox"
+        onClick={(e) => {
+          e.stopPropagation();
+          onClose();
+        }}
+        style={{
+          position: "fixed",
+          top: "20px",
+          right: "20px",
+          width: "40px",
+          height: "40px",
+          border: "1px solid rgba(255, 255, 255, 0.3)",
+          borderRadius: "999px",
+          background: "rgba(10, 9, 8, 0.45)",
+          color: "rgba(255, 255, 255, 0.88)",
+          fontSize: "16px",
+          lineHeight: 1,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          cursor: "pointer",
+          zIndex: 120,
+          backdropFilter: "blur(4px)",
+          WebkitBackdropFilter: "blur(4px)",
+          transition: "border-color 0.25s ease, color 0.25s ease",
+        }}
+      >
+        ×
+      </button>
+
       <div
         className="lb-content"
         style={{

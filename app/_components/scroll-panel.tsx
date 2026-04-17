@@ -100,9 +100,13 @@ export function ScrollPanel({ children }: ScrollPanelProps) {
           />
         </div>
 
-        {/* Scroll wrapper — Lenis attaches here */}
-        <div
+        {/* Scroll wrapper — Lenis attaches here.
+            id="cv-content" is the target of the skip-to-content link in
+            layout.tsx — keyboard users jump straight here, past the identity. */}
+        <main
           ref={wrapperRef}
+          id="cv-content"
+          tabIndex={-1}
           className="cv-scroll"
           style={{
             flex: 1,
@@ -116,7 +120,7 @@ export function ScrollPanel({ children }: ScrollPanelProps) {
           <div ref={contentRef} style={{ maxWidth: "800px", margin: "0 auto", width: "100%" }}>
             {children}
           </div>
-        </div>
+        </main>
       </div>
     </ScrollContext.Provider>
   );

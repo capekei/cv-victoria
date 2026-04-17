@@ -1,3 +1,5 @@
+import { SectionLabel } from "./section-label";
+
 interface StatementProps {
   paragraphs: string[];
 }
@@ -5,8 +7,7 @@ interface StatementProps {
 export function Statement({ paragraphs }: StatementProps) {
   return (
     <section style={{ marginBottom: "40px" }}>
-      {/* Section label */}
-      <SectionHead title="Statement" />
+      <SectionLabel title="Statement" />
 
       <p
         className="font-serif italic text-ink"
@@ -34,31 +35,5 @@ export function Statement({ paragraphs }: StatementProps) {
         </p>
       ))}
     </section>
-  );
-}
-
-function SectionHead({ title }: { title: string }) {
-  return (
-    <div style={{ marginBottom: "20px" }}>
-      <h2
-        style={{
-          fontFamily: "var(--font-sans)",
-          fontSize: "10px",
-          fontWeight: 600,
-          letterSpacing: "0.22em",
-          textTransform: "uppercase" as const,
-          color: "var(--color-accent)",
-          marginBottom: "10px",
-        }}
-      >
-        {title}
-      </h2>
-      <hr
-        style={{
-          border: "none",
-          borderTop: "1px solid var(--color-divider)",
-        }}
-      />
-    </div>
   );
 }

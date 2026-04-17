@@ -1,11 +1,25 @@
 "use client";
 
-import { useRef, useEffect, useState, useCallback } from "react";
+import { useRef, useSyncExternalStore, useCallback } from "react";
 import Image from "next/image";
 
 interface VideoBackgroundProps {
   onVideoRef?: (el: HTMLVideoElement | null) => void;
 }
+
+/* React 19: useSyncExternalStore is the canonical way to subscribe to
+   a matchMedia query — no useEffect, no setState-in-effect, and SSR-safe
+   because getServerSnapshot returns a fixed value. */
+const MQ = "(max-width: 767px)";
+const subscribeMq = (onChange: () => void) => {
+  const mql = window.matchMedia(MQ);
+  mql.addEventListener("change", onChange);
+  return () => mql.removeEventListener("change", onChange);
+};
+const getMqSnapshot = () => window.matchMedia(MQ).matches;
+/* SSR never sees a viewport — default to desktop so the video element
+   renders on initial paint. Hydration corrects if the client is mobile. */
+const getMqServerSnapshot = () => false;
 
 /**
  * Fullscreen video background with CSS grayscale filter.
@@ -14,16 +28,11 @@ interface VideoBackgroundProps {
  */
 export function VideoBackground({ onVideoRef }: VideoBackgroundProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const mq = window.matchMedia("(max-width: 767px)");
-    setIsMobile(mq.matches);
-
-    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
-  }, []);
+  const isMobile = useSyncExternalStore(
+    subscribeMq,
+    getMqSnapshot,
+    getMqServerSnapshot,
+  );
 
   const setRef = useCallback(
     (el: HTMLVideoElement | null) => {

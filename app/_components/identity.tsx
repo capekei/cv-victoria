@@ -11,7 +11,13 @@ interface IdentityProps {
   contact: ContactInfo;
 }
 
-export function Identity({ name, discipline, contact }: IdentityProps) {
+/* 16px stripped JPEG of the portrait — 383 bytes on the wire, decoded
+   instantly by the browser. Covers the decode gap so the frame never
+   flashes canvas-grey before the real image arrives. */
+const PORTRAIT_BLUR =
+  "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDABQODxIPDRQSEBIXFRQYHjIhHhwcHj0sLiQySUBMS0dARkVQWnNiUFVtVkVGZIhlbXd7gYKBTmCNl4x9lnN+gXz/2wBDARUXFx4aHjshITt8U0ZTfHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHz/wAARCAAVABADASIAAhEBAxEB/8QAFwABAQEBAAAAAAAAAAAAAAAABQACBP/EACIQAAIBBAEEAwAAAAAAAAAAAAECAwAEERIhBRNBURQx4f/EABUBAQEAAAAAAAAAAAAAAAAAAAID/8QAFxEBAQEBAAAAAAAAAAAAAAAAAQARIf/aAAwDAQACEQMRAD8ALs8fMjR0V0QMF9Dn7rd3aiKdpMqm66lE5ya5diAqoAW41Ye6We3knjjkJUSxnYAcCo1w5CRzraTRt2g+fBOMH3SVx1jsx4EG2R5f8qqpgMNS/9k=";
+
+export function Identity({ name, discipline }: IdentityProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const lightboxRef = useRef<HTMLDivElement>(null);
@@ -21,16 +27,29 @@ export function Identity({ name, discipline, contact }: IdentityProps) {
     const el = ref.current;
     if (!el) return;
 
+    const bar = el.querySelector(".cv-accent-bar");
+    const portrait = el.querySelector(".cv-portrait");
+
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)")
+      .matches;
+    if (reduced) {
+      /* Snap to final state — visitor still sees the full layout
+         without any motion. */
+      if (bar) gsap.set(bar, { scaleX: 1 });
+      if (portrait) gsap.set(portrait, { clipPath: "inset(0 0 0% 0)" });
+      return;
+    }
+
     const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
 
     tl.fromTo(
-      el.querySelector(".cv-accent-bar"),
+      bar,
       { scaleX: 0, transformOrigin: "left" },
       { scaleX: 1, duration: 0.5, delay: 0.2 }
     );
 
     tl.fromTo(
-      el.querySelector(".cv-portrait"),
+      portrait,
       { clipPath: "inset(0 0 100% 0)" },
       { clipPath: "inset(0 0 0% 0)", duration: 0.9, ease: "power2.inOut" },
       "-=0.2"
@@ -39,32 +58,46 @@ export function Identity({ name, discipline, contact }: IdentityProps) {
 
   // Lightbox animation
   useEffect(() => {
-    if (isExpanded && lightboxRef.current && lightboxImgRef.current) {
-      gsap.fromTo(
-        lightboxRef.current,
-        { opacity: 0 },
-        { opacity: 1, duration: 0.4, ease: "power2.out" }
-      );
-      gsap.fromTo(
-        lightboxImgRef.current,
-        { scale: 0.9, y: 20 },
-        { scale: 1, y: 0, duration: 0.6, ease: "power3.out", delay: 0.1 }
-      );
+    if (!isExpanded || !lightboxRef.current || !lightboxImgRef.current) return;
+
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)")
+      .matches;
+    if (reduced) {
+      gsap.set(lightboxRef.current, { opacity: 1 });
+      gsap.set(lightboxImgRef.current, { scale: 1, y: 0 });
+      return;
     }
+
+    gsap.fromTo(
+      lightboxRef.current,
+      { opacity: 0 },
+      { opacity: 1, duration: 0.4, ease: "power2.out" }
+    );
+    gsap.fromTo(
+      lightboxImgRef.current,
+      { scale: 0.9, y: 20 },
+      { scale: 1, y: 0, duration: 0.6, ease: "power3.out", delay: 0.1 }
+    );
   }, [isExpanded]);
 
   const closeLightbox = () => {
-    if (lightboxRef.current && lightboxImgRef.current) {
-      gsap.to(lightboxImgRef.current, { scale: 0.95, y: -10, opacity: 0, duration: 0.3, ease: "power2.in" });
-      gsap.to(lightboxRef.current, {
-        opacity: 0,
-        duration: 0.4,
-        ease: "power2.inOut",
-        onComplete: () => setIsExpanded(false)
-      });
-    } else {
+    if (!lightboxRef.current || !lightboxImgRef.current) {
       setIsExpanded(false);
+      return;
     }
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)")
+      .matches;
+    if (reduced) {
+      setIsExpanded(false);
+      return;
+    }
+    gsap.to(lightboxImgRef.current, { scale: 0.95, y: -10, opacity: 0, duration: 0.3, ease: "power2.in" });
+    gsap.to(lightboxRef.current, {
+      opacity: 0,
+      duration: 0.4,
+      ease: "power2.inOut",
+      onComplete: () => setIsExpanded(false)
+    });
   };
 
   return (
@@ -115,6 +148,8 @@ export function Identity({ name, discipline, contact }: IdentityProps) {
             fill
             priority
             sizes="320px"
+            placeholder="blur"
+            blurDataURL={PORTRAIT_BLUR}
             style={{ objectFit: "cover", objectPosition: "center 15%" }}
           />
         </div>

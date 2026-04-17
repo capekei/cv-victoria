@@ -1,51 +1,17 @@
 "use client";
 
-import { useRef, useEffect, useState, useCallback } from "react";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useState, useCallback } from "react";
 import type { ProcessStep } from "@/app/artist";
 import { SectionLabel } from "./section-label";
 import { Lightbox } from "./lightbox";
 import { ProcessMedia } from "./process-media";
-
-gsap.registerPlugin(ScrollTrigger);
 
 interface ProcessProps {
   steps: ProcessStep[];
 }
 
 export function Process({ steps }: ProcessProps) {
-  const ref = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-
-    const scroller = el.closest(".cv-scroll");
-    if (!scroller) return;
-
-    const items = el.querySelectorAll(".cv-process-item");
-    gsap.set(items, { opacity: 0, y: 14 });
-
-    ScrollTrigger.create({
-      trigger: el,
-      scroller,
-      start: "top 88%",
-      once: true,
-      onEnter: () => {
-        gsap.to(items, {
-          opacity: 1,
-          y: 0,
-          duration: 0.6,
-          stagger: 0.1,
-          ease: "power2.out",
-        });
-      },
-    });
-
-    return () => ScrollTrigger.getAll().forEach((t) => t.kill());
-  }, []);
 
   const closeLightbox = useCallback(() => setActiveIndex(null), []);
   const navigateLightbox = useCallback(
@@ -62,7 +28,7 @@ export function Process({ steps }: ProcessProps) {
 
   return (
     <>
-      <section ref={ref} style={{ marginBottom: "40px" }}>
+      <section style={{ marginBottom: "40px" }}>
         <SectionLabel title="Process" />
 
         <p
@@ -83,16 +49,18 @@ export function Process({ steps }: ProcessProps) {
           {steps.map((step, i) => (
             <div
               key={step.title}
-              className="cv-process-item"
+              className="cv-process-item cv-stagger-item"
               style={{
                 display: "grid",
                 gridTemplateColumns: "140px 1fr",
                 gap: "18px",
                 alignItems: "start",
-              }}
+                ["--stagger-i" as string]: i,
+              } as React.CSSProperties}
             >
               <button
                 onClick={() => setActiveIndex(i)}
+                aria-label={`Enlarge ${step.title}`}
                 style={{
                   width: "140px",
                   height: "140px",

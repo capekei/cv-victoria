@@ -1,4 +1,6 @@
 import nodemailer from "nodemailer";
+import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
 import { contactSchema } from "./schema";
 
 /* ═══════════════════════════════════════════════════════════════
@@ -12,22 +14,52 @@ import { contactSchema } from "./schema";
      SMTP_PASS          the mailbox password
      CONTACT_TO_EMAIL   (optional) where the messages go.
                         Defaults to SMTP_USER if not set.
+
+   Optional (Upstash Marketplace integration — distributed rate limit):
+     UPSTASH_REDIS_REST_URL
+     UPSTASH_REDIS_REST_TOKEN
+   Absent → falls back to in-memory Map (per-instance, best-effort).
    ─────────────────────────────────────────────────────────────── */
 
 /* nodemailer needs Node's `net` + `tls` modules — Edge runtime
    cannot open raw TCP sockets, so this handler must run on Node. */
 export const runtime = "nodejs";
 
-/* ── In-memory rate limit (best-effort on serverless) ──
-   3 submissions per 5 min per IP. Different Vercel instances
-   each keep their own Map, so this isn't a hard wall — but
-   combined with the honeypot below, it's enough to stop all
-   drive-by bots and casual abuse. */
 const RATE_LIMIT_WINDOW_MS = 5 * 60 * 1000;
 const RATE_LIMIT_MAX = 3;
+
+/* ── Upstash distributed rate limit (preferred) ──
+   Lazy init so missing env vars fall back to in-memory without
+   crashing the route module at import time. */
+let upstashLimiter: Ratelimit | null = null;
+function getUpstashLimiter(): Ratelimit | null {
+  if (upstashLimiter) return upstashLimiter;
+  if (
+    !process.env.UPSTASH_REDIS_REST_URL ||
+    !process.env.UPSTASH_REDIS_REST_TOKEN
+  ) {
+    return null;
+  }
+  try {
+    upstashLimiter = new Ratelimit({
+      redis: Redis.fromEnv(),
+      limiter: Ratelimit.slidingWindow(RATE_LIMIT_MAX, "5 m"),
+      analytics: true,
+      prefix: "cv-victoria:contact",
+    });
+    return upstashLimiter;
+  } catch (err) {
+    console.warn("Upstash init failed, falling back to in-memory rate limit", err);
+    return null;
+  }
+}
+
+/* ── In-memory fallback (local dev, or if Upstash unreachable) ──
+   Per-instance Map — combined with honeypot below, enough to stop
+   casual abuse. Only used when Upstash env vars are absent. */
 const rateStore = new Map<string, number[]>();
 
-function allow(ip: string): boolean {
+function allowInMemory(ip: string): boolean {
   const now = Date.now();
   const history = (rateStore.get(ip) ?? []).filter(
     (t) => now - t < RATE_LIMIT_WINDOW_MS,
@@ -48,6 +80,26 @@ function allow(ip: string): boolean {
     }
   }
   return true;
+}
+
+/* Unified rate-limit check. Returns { allowed, retryAfter } where
+   retryAfter is in seconds (surfaced to the client as a friendlier wait). */
+async function checkRateLimit(
+  ip: string,
+): Promise<{ allowed: boolean; retryAfter: number }> {
+  const limiter = getUpstashLimiter();
+  if (limiter) {
+    const result = await limiter.limit(ip);
+    const retryAfter = Math.max(
+      1,
+      Math.ceil((result.reset - Date.now()) / 1000),
+    );
+    return { allowed: result.success, retryAfter };
+  }
+  return {
+    allowed: allowInMemory(ip),
+    retryAfter: Math.ceil(RATE_LIMIT_WINDOW_MS / 1000),
+  };
 }
 
 function getClientIp(req: Request): string {
@@ -74,13 +126,17 @@ function escapeHtml(s: string): string {
 export async function POST(request: Request) {
   try {
     const ip = getClientIp(request);
-    if (!allow(ip)) {
+    const { allowed, retryAfter } = await checkRateLimit(ip);
+    if (!allowed) {
       return Response.json(
         {
           success: false,
           error: "Too many requests. Please try again in a few minutes.",
         },
-        { status: 429 },
+        {
+          status: 429,
+          headers: { "Retry-After": String(retryAfter) },
+        },
       );
     }
 

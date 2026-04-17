@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Bodoni_Moda, Montserrat } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 
 const bodoniModa = Bodoni_Moda({
@@ -58,13 +60,15 @@ export const metadata: Metadata = {
     url: "https://victoriazeder.com",
     siteName: "Victoria Zeder",
     locale: "en_US",
+    /* Dedicated 1200×630 JPG (~200KB) for social-scrape previews.
+       Full-resolution PNG remains in /public for use in /contact + gallery. */
     images: [
       {
-        url: "/victoria-portrait.png",
-        width: 1728,
-        height: 2304,
+        url: "/victoria-portrait-og.jpg",
+        width: 1200,
+        height: 630,
         alt: "Victoria Zeder, visual artist based in Miami",
-        type: "image/png",
+        type: "image/jpeg",
       },
     ],
   },
@@ -73,7 +77,7 @@ export const metadata: Metadata = {
     title: "Victoria Zeder — Visual Artist",
     description:
       "Miami-based visual artist. 24k gold leaf, acrylic ink, thread, encaustic.",
-    images: ["/victoria-portrait.png"],
+    images: ["/victoria-portrait-og.jpg"],
   },
   robots: {
     index: true,
@@ -96,7 +100,14 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${bodoniModa.variable} ${montserrat.variable}`}>
       <body className="font-sans text-ink antialiased bg-canvas">
+        {/* Skip-to-content — first focusable element; jumps past the identity
+            panel straight into the scroll panel where the CV content lives. */}
+        <a href="#cv-content" className="skip-link">
+          Skip to content
+        </a>
         {children}
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );

@@ -1,48 +1,25 @@
 "use client";
 
 import { useRef, useEffect, useState, useCallback } from "react";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Image from "next/image";
 import type { GalleryPiece } from "@/app/artist";
 import { SectionLabel } from "./section-label";
 import { Lightbox } from "./lightbox";
 
-gsap.registerPlugin(ScrollTrigger);
-
 interface GalleryProps {
   pieces: GalleryPiece[];
 }
 
+/* Card width + gap (16px) — one "step" of the scroller. Cards scale
+   via clamp(220px, 75vw, 280px), so we read the first card's actual
+   rendered width at keypress time rather than hardcoding 296. */
+const GAP = 16;
+
 export function Gallery({ pieces }: GalleryProps) {
-  const sectionRef = useRef<HTMLDivElement>(null);
   const stripRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
-  /* ── Reveal animation ── */
-  useEffect(() => {
-    const el = sectionRef.current;
-    if (!el) return;
-
-    const scroller = el.closest(".cv-scroll");
-    if (!scroller) return;
-
-    gsap.set(el, { opacity: 0, y: 14 });
-
-    ScrollTrigger.create({
-      trigger: el,
-      scroller,
-      start: "top 92%",
-      once: true,
-      onEnter: () => {
-        gsap.to(el, { opacity: 1, y: 0, duration: 0.65, ease: "power2.out" });
-      },
-    });
-
-    return () => ScrollTrigger.getAll().forEach((t) => t.kill());
-  }, []);
-
-  /* ── Drag to scroll the strip ── */
+  /* ── Drag to scroll (mouse only) ── */
   useEffect(() => {
     const strip = stripRef.current;
     if (!strip) return;
@@ -82,6 +59,29 @@ export function Gallery({ pieces }: GalleryProps) {
     };
   }, []);
 
+  /* ── Toggle .is-scrolled-end so the right-edge fade mask lifts
+       when the last card is fully in view. Keeps the edge affordance
+       honest: if there's more to see, it's masked; if not, it isn't. */
+  useEffect(() => {
+    const strip = stripRef.current;
+    if (!strip) return;
+
+    const update = () => {
+      const atEnd =
+        strip.scrollLeft + strip.clientWidth >= strip.scrollWidth - 4;
+      strip.classList.toggle("is-scrolled-end", atEnd);
+    };
+
+    update();
+    strip.addEventListener("scroll", update, { passive: true });
+    const ro = new ResizeObserver(update);
+    ro.observe(strip);
+    return () => {
+      strip.removeEventListener("scroll", update);
+      ro.disconnect();
+    };
+  }, []);
+
   const openLightbox = useCallback((index: number) => {
     setActiveIndex(index);
   }, []);
@@ -102,15 +102,48 @@ export function Gallery({ pieces }: GalleryProps) {
     [pieces.length]
   );
 
+  /* ── Keyboard navigation on the strip itself (tabIndex=0).
+     Left/Right scroll one card; Home/End jump to the extremes. */
+  const onStripKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
+    const strip = stripRef.current;
+    if (!strip) return;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const behavior: ScrollBehavior = reduced ? "auto" : "smooth";
+    const firstCard = strip.querySelector<HTMLButtonElement>(".gallery-card");
+    const step = (firstCard?.offsetWidth ?? 280) + GAP;
+    switch (e.key) {
+      case "ArrowRight":
+        e.preventDefault();
+        strip.scrollBy({ left: step, behavior });
+        break;
+      case "ArrowLeft":
+        e.preventDefault();
+        strip.scrollBy({ left: -step, behavior });
+        break;
+      case "Home":
+        e.preventDefault();
+        strip.scrollTo({ left: 0, behavior });
+        break;
+      case "End":
+        e.preventDefault();
+        strip.scrollTo({ left: strip.scrollWidth, behavior });
+        break;
+    }
+  }, []);
+
   return (
     <>
-      <section ref={sectionRef} style={{ marginBottom: "40px" }}>
+      <section style={{ marginBottom: "40px" }}>
         <SectionLabel title="Works" />
 
-        {/* Horizontal scroll strip */}
+        {/* Horizontal scroll strip — focusable, keyboard navigable */}
         <div
           ref={stripRef}
           className="gallery-strip"
+          role="region"
+          aria-label="Selected works — horizontal gallery. Use left and right arrow keys to browse."
+          tabIndex={0}
+          onKeyDown={onStripKeyDown}
           style={{
             display: "flex",
             gap: "16px",
@@ -133,19 +166,24 @@ export function Gallery({ pieces }: GalleryProps) {
               className="gallery-card"
               style={{
                 flex: "0 0 auto",
-                width: "280px",
+                /* Clamp so 320px viewports fit a card with right-edge
+                   peek indicating scroll; desktop keeps the 280px spec. */
+                width: "clamp(220px, 75vw, 280px)",
                 border: "none",
                 background: "none",
                 padding: 0,
                 cursor: "pointer",
                 textAlign: "left",
+                scrollSnapAlign: "start",
               }}
             >
-              {/* Thumbnail */}
+              {/* Thumbnail — aspect-ratio locked so the masonry can't shift
+                  while the browser decodes the image. Width 100% inherits
+                  the button's clamp, so the ratio adapts. */}
               <div
                 style={{
-                  width: "280px",
-                  height: "360px",
+                  width: "100%",
+                  aspectRatio: "280 / 360",
                   position: "relative",
                   overflow: "hidden",
                   backgroundColor: "var(--color-canvas)",
@@ -155,7 +193,7 @@ export function Gallery({ pieces }: GalleryProps) {
                   src={piece.image}
                   alt={piece.title}
                   fill
-                  sizes="280px"
+                  sizes="(max-width: 360px) 75vw, 280px"
                   style={{
                     objectFit: "cover",
                     transition: "transform 1.2s cubic-bezier(0.2, 0.8, 0.2, 1)",
@@ -204,7 +242,7 @@ export function Gallery({ pieces }: GalleryProps) {
             opacity: 0.7,
           }}
         >
-          Drag · click to enlarge
+          Drag or use arrow keys · click to enlarge
         </p>
       </section>
 
