@@ -10,6 +10,7 @@ import { PauseButton } from "./PauseButton";
 import { ScrollIndicator } from "./ScrollIndicator";
 import { ContactForm } from "./ContactForm";
 import { SignatureReveal } from "./SignatureReveal";
+import { Postscript } from "./Postscript";
 
 /* Phase 2 words with cascading opacity */
 /* Three equal invitations — a trinity, not a ranked list.
@@ -29,8 +30,17 @@ export function ContactExperience() {
   const wordRefs = useRef<(HTMLDivElement | null)[]>([]);
   const underlineRefs = useRef<(SVGLineElement | null)[]>([]);
   const phase3Ref = useRef<HTMLDivElement>(null);
+  /* Keep-scrolling hint — a single hairline + italic "más." that draws
+     itself a few seconds after the form has settled. Lives as a child
+     of phase3Ref so it inherits the form's fade-in / fade-out as the
+     visitor scrolls between Phase 3 and Phase 4. */
+  const hintRef = useRef<HTMLDivElement>(null);
+  const hintTriggered = useRef(false);
+  /* Phase 4 — postscript card sits in the same on-screen position as
+     the contact form, swapping in as the visitor keeps scrolling. */
+  const phase4PostscriptRef = useRef<HTMLDivElement>(null);
 
-  /* Phase 4 overlay */
+  /* Phase 5 — thank-you overlay (after submission) */
   const phase4Ref = useRef<HTMLDivElement>(null);
 
   /* Video element */
@@ -39,6 +49,10 @@ export function ContactExperience() {
   /* Form state */
   const [submitted, setSubmitted] = useState(false);
   const [showSignature, setShowSignature] = useState(false);
+  /* Drives the Postscript card's internal autoplay + entrance GSAP.
+     Flips true once scroll has revealed the card past the halfway
+     point so we don't start playback for someone who's only glimpsed it. */
+  const [postscriptActive, setPostscriptActive] = useState(false);
 
   const handleSuccess = useCallback(() => {
     setSubmitted(true);
@@ -87,7 +101,7 @@ export function ContactExperience() {
 
     /* If user prefers reduced motion, skip all animations — content stacks naturally */
     if (prefersReduced) {
-      [phase1Ref, phase2Ref, phase3Ref].forEach((ref) => {
+      [phase1Ref, phase2Ref, phase3Ref, phase4PostscriptRef].forEach((ref) => {
         if (ref.current) {
           ref.current.style.opacity = "1";
           ref.current.style.position = "relative";
@@ -95,6 +109,9 @@ export function ContactExperience() {
           ref.current.style.pointerEvents = "auto";
         }
       });
+      /* Reduced-motion visitors see both cards in document flow —
+         postscript shows beneath the form, playback drivers unchanged. */
+      setPostscriptActive(true);
       return;
     }
 
@@ -105,17 +122,23 @@ export function ContactExperience() {
        the background media is a Next.js <Image> fallback; we target
        "video, img" so the B&W → color filter animates identically on
        both touch and pointer devices. ========== */
-    const vh = window.innerHeight;
-    /* Deliberately slow timeline: 10vh total, with each phase stretched
-       enough to feel noticeably slower on trackpads, mouse wheels, and
-       touch flicks. Target timeline:
-         0    → 2.2vh  Phase 1 (quote)
-         2.2  → 5.6vh  Phase 2 (three words stagger + fade)
-         5.6  → 7.8vh  Media B&W → color (ONLY — no form yet)
-         7.8  → 8.2vh  Dead-zone gap (media settled, form still hidden)
-         8.2  → 9.8vh  Form rises (opacity + translateY + blur)
-         9.8  → 10vh   Form at rest */
-    const pinDistance = 10 * vh; // total scroll distance while pinned
+    /* vh floor at 560 so very short landscape phones don't rush the
+       1.6vh form-entrance + 1.5vh postscript-swap animations into
+       sub-100px of scroll, which makes them feel jumpy. Math is still
+       vh-relative; only the minimum changes. */
+    const vh = Math.max(window.innerHeight, 560);
+    /* Deliberately slow timeline — each phase stretched enough to feel
+       noticeably slower on trackpads, mouse wheels, and touch flicks.
+       Target timeline:
+         0     → 2.2vh   Phase 1 (quote)
+         2.2   → 5.6vh   Phase 2 (three words stagger + fade)
+         5.6   → 7.8vh   Media B&W → color
+         7.8   → 8.2vh   Dead zone
+         8.2   → 9.8vh   Form rises
+         9.8   → 10.8vh  Form at rest
+         10.8  → 12.4vh  Form fades out / postscript card swaps in
+         12.4  → 13.5vh  Postscript at rest */
+    const pinDistance = 13.5 * vh; // total scroll distance while pinned
 
     /* Spacer must be pinDistance + vh so the last phase fully reveals.
        The section is position:fixed during pin (0 height in flow), so
@@ -148,6 +171,13 @@ export function ContactExperience() {
       phase3Ref.current.style.transform = "translateY(60px)";
       phase3Ref.current.style.pointerEvents = "none";
       phase3Ref.current.style.setProperty("--glass-blur", "0px");
+    }
+    /* Postscript card starts hidden beneath the form's rest position;
+       it rises into view in Phase 4 as the form fades out. */
+    if (phase4PostscriptRef.current) {
+      phase4PostscriptRef.current.style.opacity = "0";
+      phase4PostscriptRef.current.style.transform = "translateY(60px)";
+      phase4PostscriptRef.current.style.pointerEvents = "none";
     }
     wordRefs.current.forEach((w) => {
       if (w) {
@@ -227,16 +257,97 @@ export function ContactExperience() {
          Deliberate 0.4vh dead-zone between end of video transition
          and start of form entry — visitor sees ONLY the color video. */
       const pForm = clamp01((scroll - 8.2 * vh) / (1.6 * vh));
-      const eased = easeOut2(pForm);
+      const easedForm = easeOut2(pForm);
+
+      /* ── Phase 4a: form fades out from 10.8vh → 12.4vh ──
+         Starts after a 1vh rest window (9.8 → 10.8) so the visitor
+         sees the form composed and legible before it begins its exit. */
+      const pFormExit = clamp01((scroll - 10.8 * vh) / (1.6 * vh));
+      const easedExit = easeInOut2(pFormExit);
+
       if (phase3Ref.current) {
-        phase3Ref.current.style.opacity = String(eased);
-        phase3Ref.current.style.transform = `translateY(${60 * (1 - eased)}px)`;
+        /* Compose Phase 3b entrance and Phase 4a exit. The entrance
+           brings the form up and solidifies the glass; the exit fades
+           it out and drifts it upward. Only one is "active" at a time
+           because their scroll ranges don't overlap. */
+        const formOpacity = easedForm * (1 - easedExit);
+        const formY = 60 * (1 - easedForm) - 40 * easedExit;
+        phase3Ref.current.style.opacity = String(formOpacity);
+        phase3Ref.current.style.transform = `translateY(${formY}px)`;
         phase3Ref.current.style.setProperty(
           "--glass-blur",
-          `${20 * eased}px`,
+          `${20 * easedForm * (1 - easedExit)}px`,
         );
-        phase3Ref.current.style.pointerEvents = eased > 0.5 ? "auto" : "none";
+        /* Interactive only when the form is actually the active card */
+        phase3Ref.current.style.pointerEvents =
+          formOpacity > 0.5 && easedExit < 0.3 ? "auto" : "none";
       }
+
+      /* ── Keep-scrolling hint ──
+         Fires once, ~1s after the form first reaches rest. A hairline
+         draws down below the card, followed by a quiet italic "sigue."
+         The whole thing inherits the form's opacity so it vanishes
+         cleanly when Phase 4 takes over. */
+      if (pForm >= 0.98 && !hintTriggered.current && hintRef.current) {
+        hintTriggered.current = true;
+        const hint = hintRef.current;
+        const line = hint.querySelector<HTMLDivElement>(".cv-hint-line");
+        const word = hint.querySelector<HTMLSpanElement>(".cv-hint-word");
+
+        const tl = gsap.timeline({ delay: 1.0 });
+        if (line) {
+          gsap.set(line, { scaleY: 0, transformOrigin: "top center" });
+          tl.to(line, {
+            scaleY: 1,
+            duration: 0.9,
+            ease: "power2.inOut",
+          });
+        }
+        if (word) {
+          gsap.set(word, { opacity: 0, y: 6 });
+          tl.to(
+            word,
+            {
+              opacity: 0.95,
+              y: 0,
+              duration: 0.7,
+              ease: "power2.out",
+            },
+            "-=0.3",
+          );
+        }
+        /* Gentle breath: the word drifts down 3px and back up on a
+           2.6s sine loop. Slower than a pulse, more like a held gaze
+           that softens and refocuses. */
+        if (word) {
+          tl.to(word, {
+            y: 3,
+            opacity: 0.7,
+            duration: 1.3,
+            ease: "sine.inOut",
+            repeat: -1,
+            yoyo: true,
+          });
+        }
+      }
+
+      /* ── Phase 4b: postscript card rises from 11.1vh → 12.6vh ──
+         Starts 0.3vh after the form begins fading so the two pass
+         each other rather than collide. */
+      const pPost = clamp01((scroll - 11.1 * vh) / (1.5 * vh));
+      const easedPost = easeOut2(pPost);
+      if (phase4PostscriptRef.current) {
+        phase4PostscriptRef.current.style.opacity = String(easedPost);
+        phase4PostscriptRef.current.style.transform = `translateY(${
+          60 * (1 - easedPost)
+        }px)`;
+        phase4PostscriptRef.current.style.pointerEvents =
+          easedPost > 0.5 ? "auto" : "none";
+      }
+      /* Autoplay the daughter video + run the in-card GSAP once the
+         postscript is genuinely on screen. React bails out on === value
+         so this is safe to call every frame. */
+      setPostscriptActive(easedPost > 0.6);
     };
 
     /* RAF loop — lerp smoothScroll toward targetScroll */
@@ -508,6 +619,7 @@ export function ContactExperience() {
             inset: 0,
             zIndex: 6,
             display: "flex",
+            flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
             opacity: 0,
@@ -515,6 +627,86 @@ export function ContactExperience() {
           }}
         >
           <ContactForm onSuccess={handleSuccess} />
+
+          {/* ── Keep-scrolling hint ──
+               Sits directly below the form as a flex sibling, so it
+               anchors to the card's edge on every viewport. A drawing
+               hairline + italic serif "more." with a glow that lifts it
+               off the painting's chaos. Fires ~1s after form at rest.
+               CSS class `cv-contact-hint` toggles display:none on
+               viewports shorter than 560px (landscape phones) so the
+               hint never competes with the form for scarce vertical
+               space. */}
+          <div
+            ref={hintRef}
+            className="cv-contact-hint"
+            aria-hidden="true"
+            style={{
+              marginTop: "clamp(16px, 2.5vh, 28px)",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: "10px",
+              pointerEvents: "none",
+            }}
+          >
+            <div
+              className="cv-hint-line"
+              style={{
+                width: "2px",
+                height: "36px",
+                borderRadius: "1px",
+                background: "rgba(255, 255, 255, 0.92)",
+                /* Subtle halo so the line reads against any color of
+                   painting underneath — dark glow pushes the white
+                   forward without adding visible chrome. */
+                boxShadow:
+                  "0 0 0 1px rgba(0, 0, 0, 0.10), 0 0 14px rgba(0, 0, 0, 0.45)",
+                willChange: "transform",
+              }}
+            />
+            <span
+              className="cv-hint-word font-serif"
+              style={{
+                fontStyle: "italic",
+                fontWeight: 400,
+                fontSize: "15px",
+                letterSpacing: "0.01em",
+                color: "rgba(255, 255, 255, 0.98)",
+                /* Stacked shadows — a tight dark drop for contrast and a
+                   wider softer halo so the word floats legibly over any
+                   region of the painting. */
+                textShadow:
+                  "0 1px 2px rgba(0, 0, 0, 0.55), 0 2px 22px rgba(0, 0, 0, 0.55)",
+                opacity: 0,
+                willChange: "opacity, transform",
+              }}
+            >
+              more.
+            </span>
+          </div>
+        </div>
+
+        {/* ── Phase 4: The Postscript ──
+             Twin position to the form. The painting backdrop stays still
+             while the cards swap: form drifts up and fades, postscript
+             rises from below and takes the same on-screen spot. One
+             continuous scroll, no section break. */}
+        <div
+          ref={phase4PostscriptRef}
+          data-contact-phase
+          style={{
+            position: "absolute",
+            inset: 0,
+            zIndex: 7,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            opacity: 0,
+            pointerEvents: "none",
+          }}
+        >
+          <Postscript active={postscriptActive} />
         </div>
       </section>
 
