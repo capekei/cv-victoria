@@ -4,26 +4,11 @@ interface SectionLabelProps {
 
 export function SectionLabel({ title }: SectionLabelProps) {
   return (
-    <div style={{ marginBottom: "20px" }}>
-      <h2
-        style={{
-          fontFamily: "var(--font-sans)",
-          fontSize: "10px",
-          fontWeight: 600,
-          letterSpacing: "0.22em",
-          textTransform: "uppercase" as const,
-          color: "var(--color-accent)",
-          marginBottom: "10px",
-        }}
-      >
+    <div className="mb-5">
+      <h2 className="font-sans text-[10px] font-semibold uppercase tracking-[0.22em] text-accent mb-2.5">
         {title}
       </h2>
-      <hr
-        style={{
-          border: "none",
-          borderTop: "1px solid var(--color-divider)",
-        }}
-      />
+      <hr className="border-0 border-t border-divider" />
     </div>
   );
 }

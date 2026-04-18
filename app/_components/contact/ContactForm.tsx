@@ -2,17 +2,25 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRef, useState } from "react";
-import { contactSchema, type ContactData } from "@/app/api/contact/schema";
+import { useRef, useState, useTransition } from "react";
+import { contactSchema, type ContactData } from "@/app/_lib/contact-schema";
+import { submitContact } from "@/app/_actions/contact";
 
 interface ContactFormProps {
   onSuccess: () => void;
 }
 
+const LABEL_CLASS =
+  "block font-sans text-[9.5px] font-medium uppercase tracking-[0.2em] text-secondary mb-2";
+const INPUT_CLASS =
+  "w-full font-sans text-[15px] font-normal text-ink bg-transparent border-0 border-b border-divider pb-2.5 outline-none transition-[border-color] duration-300 ease focus:border-b-ink read-only:opacity-60";
+const ERROR_CLASS = "font-sans text-[12px] font-normal text-[#E24B4A] mt-1.5";
+
 export function ContactForm({ onSuccess }: ContactFormProps) {
-  const [submitting, setSubmitting] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const [sent, setSent] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
+  const submitting = isPending;
   /* Honeypot input — bots fill hidden fields, humans never touch them.
      Kept outside react-hook-form so it doesn't pollute the typed data. */
   const honeypotRef = useRef<HTMLInputElement>(null);
@@ -25,110 +33,44 @@ export function ContactForm({ onSuccess }: ContactFormProps) {
     resolver: zodResolver(contactSchema),
   });
 
-  const onSubmit = async (data: ContactData) => {
-    setSubmitting(true);
+  const onSubmit = (data: ContactData) => {
     setServerError(null);
-    try {
-      const res = await fetch("/api/contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...data,
-          /* Server checks this field; if filled, request is silently
-             dropped (treated as success on the client). */
-          website: honeypotRef.current?.value ?? "",
-        }),
-      });
-      if (res.ok) {
-        /* Flash an inline "Sent" confirmation before the Phase 4 overlay
-           covers the form. Screen readers announce it via aria-live, and
-           sighted users get immediate feedback even if the clip-path
-           transition is delayed by a slow CPU. */
+    const payload = {
+      ...data,
+      /* Server checks this field; if filled, the submission is silently
+         dropped (treated as success on the client). */
+      website: honeypotRef.current?.value ?? "",
+    };
+    startTransition(async () => {
+      const result = await submitContact(payload);
+      if (result.ok) {
         setSent(true);
-        setSubmitting(false);
-        /* Small beat so the confirmation is perceivable, then hand off. */
         window.setTimeout(onSuccess, 350);
       } else {
-        const payload = (await res.json().catch(() => null)) as
-          | { error?: string }
-          | null;
-        setServerError(
-          payload?.error ?? "Something went wrong. Please try again.",
-        );
-        setSubmitting(false);
+        setServerError(result.error);
       }
-    } catch {
-      setServerError("Something went wrong. Please try again.");
-      setSubmitting(false);
-    }
-  };
-
-  const labelStyle = {
-    fontFamily: "var(--font-montserrat)",
-    fontSize: "9.5px",
-    fontWeight: 500,
-    letterSpacing: "0.2em",
-    textTransform: "uppercase",
-    color: "var(--color-secondary)",
-    display: "block",
-    marginBottom: "8px",
-  } as const;
-
-  const inputStyle = {
-    fontFamily: "var(--font-montserrat)",
-    fontSize: "15px",
-    fontWeight: 400,
-    color: "var(--color-ink)",
-    width: "100%",
-    border: "none",
-    borderBottom: "1px solid var(--color-divider)",
-    background: "transparent",
-    paddingBottom: "10px",
-    outline: "none",
-    transition: "border-color 0.3s ease",
-    opacity: submitting ? 0.6 : 1,
-  } as const;
-
-  const errorStyle = {
-    fontFamily: "var(--font-montserrat)",
-    fontSize: "12px",
-    fontWeight: 400,
-    color: "#E24B4A",
-    marginTop: "6px",
-  } as const;
-
-  const handleFocus = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    e.currentTarget.style.borderBottomColor = "var(--color-ink)";
-  };
-  const handleBlur = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    e.currentTarget.style.borderBottomColor = "var(--color-divider)";
+    });
   };
 
   return (
     <div
-      style={{
-        width: "min(420px, calc(100vw - 48px))",
-        padding: "36px 28px",
-        background: "rgba(247, 246, 242, 0.88)",
-        /* --glass-blur is driven by ContactExperience during Phase 3b
-           entry, ramping from 0px → 20px as the form rises. Falls back
-           to 20px so stacked mobile / reduced-motion still gets frost. */
-        backdropFilter: "blur(var(--glass-blur, 20px))",
-        WebkitBackdropFilter: "blur(var(--glass-blur, 20px))",
-        borderRadius: "5px",
-        boxShadow: "0 20px 60px rgba(0,0,0,0.15)",
-      }}
+      /* --glass-blur is driven by ContactExperience during Phase 3b
+         entry, ramping from 0px → 20px as the form rises. Falls back
+         to 20px so stacked mobile / reduced-motion still gets frost. */
+      className="w-[min(420px,calc(100vw-48px))] py-9 px-7 bg-[rgba(247,246,242,0.88)] rounded-[5px] shadow-[0_20px_60px_rgba(0,0,0,0.15)] backdrop-blur-[var(--glass-blur,20px)] [-webkit-backdrop-filter:blur(var(--glass-blur,20px))]"
     >
       {/* react-hook-form's handleSubmit returns a ref-safe submit handler;
           the ref inside onSubmit is read only when the form is submitted,
           never during render. The lint rule's heuristic can't see past the
           wrapper function, so suppress it for this specific call site. */}
       {/* eslint-disable-next-line react-hooks/refs */}
-      <form onSubmit={handleSubmit(onSubmit)} noValidate>
+      <form onSubmit={handleSubmit(onSubmit)} noValidate data-state={submitting ? "submitting" : sent ? "sent" : "idle"}>
         {/* Honeypot — hidden from humans, irresistible to bots.
             Positioned off-screen rather than display:none because
             some bots ignore display:none. tabIndex=-1 + aria-hidden
-            keep it out of keyboard + screen-reader flows. */}
+            keep it out of keyboard + screen-reader flows. Inline styles
+            here are intentional: exact box metrics matter for bot evasion
+            and to keep Playwright's toBeHidden() heuristic happy. */}
         <div
           aria-hidden="true"
           style={{
@@ -152,8 +94,8 @@ export function ContactForm({ onSuccess }: ContactFormProps) {
         </div>
 
         {/* Name */}
-        <div style={{ marginBottom: "24px" }}>
-          <label htmlFor="contact-name" style={labelStyle}>
+        <div className="mb-6">
+          <label htmlFor="contact-name" className={LABEL_CLASS}>
             Your name
           </label>
           <input
@@ -163,20 +105,18 @@ export function ContactForm({ onSuccess }: ContactFormProps) {
             maxLength={100}
             readOnly={submitting}
             {...register("name")}
-            onFocus={handleFocus}
-            onBlur={handleBlur}
-            style={inputStyle}
+            className={INPUT_CLASS}
           />
           {errors.name && (
-            <p role="alert" aria-live="polite" style={errorStyle}>
+            <p role="alert" aria-live="polite" className={ERROR_CLASS}>
               {errors.name.message}
             </p>
           )}
         </div>
 
         {/* Email */}
-        <div style={{ marginBottom: "24px" }}>
-          <label htmlFor="contact-email" style={labelStyle}>
+        <div className="mb-6">
+          <label htmlFor="contact-email" className={LABEL_CLASS}>
             Your email
           </label>
           <input
@@ -186,20 +126,18 @@ export function ContactForm({ onSuccess }: ContactFormProps) {
             maxLength={100}
             readOnly={submitting}
             {...register("email")}
-            onFocus={handleFocus}
-            onBlur={handleBlur}
-            style={inputStyle}
+            className={INPUT_CLASS}
           />
           {errors.email && (
-            <p role="alert" aria-live="polite" style={errorStyle}>
+            <p role="alert" aria-live="polite" className={ERROR_CLASS}>
               {errors.email.message}
             </p>
           )}
         </div>
 
         {/* Message */}
-        <div style={{ marginBottom: "28px" }}>
-          <label htmlFor="contact-message" style={labelStyle}>
+        <div className="mb-7">
+          <label htmlFor="contact-message" className={LABEL_CLASS}>
             What brings you here?
           </label>
           <textarea
@@ -207,68 +145,32 @@ export function ContactForm({ onSuccess }: ContactFormProps) {
             maxLength={2000}
             readOnly={submitting}
             {...register("message")}
-            onFocus={handleFocus}
-            onBlur={handleBlur}
-            style={{
-              ...inputStyle,
-              minHeight: "80px",
-              resize: "vertical",
-              lineHeight: "1.5",
-            }}
+            className={`${INPUT_CLASS} min-h-20 resize-y leading-[1.5]`}
           />
           {errors.message && (
-            <p role="alert" aria-live="polite" style={errorStyle}>
+            <p role="alert" aria-live="polite" className={ERROR_CLASS}>
               {errors.message.message}
             </p>
           )}
         </div>
 
         {/* Submit */}
-        <div style={{ textAlign: "center" }}>
+        <div className="text-center">
           <button
             type="submit"
             disabled={submitting || sent}
             aria-label="Submit contact form"
-            className="contact-submit-btn"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: "14px 48px",
-              background: "var(--color-ink)",
-              border: "none",
-              borderRadius: 0,
-              cursor: submitting ? "wait" : sent ? "default" : "pointer",
-              minWidth: "140px",
-              minHeight: "44px",
-              transition:
-                "letter-spacing 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94), background 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94), color 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
-            }}
+            className="contact-submit-btn inline-flex items-center justify-center py-3.5 px-12 bg-ink border-0 rounded-none min-w-[140px] min-h-11 transition-[letter-spacing,background,color] duration-[1200ms] ease-[cubic-bezier(0.25,0.46,0.45,0.94)] cursor-pointer disabled:cursor-wait data-[sent=true]:cursor-default"
+            data-sent={sent}
           >
             {submitting ? (
               <span
                 aria-hidden="true"
-                style={{
-                  display: "block",
-                  width: "12px",
-                  height: "12px",
-                  border: "2px solid transparent",
-                  borderTopColor: "var(--color-cream)",
-                  borderRadius: "50%",
-                  animation: "contact-spin 0.6s linear infinite",
-                }}
+                className="block w-3 h-3 border-2 border-transparent border-t-cream rounded-full"
+                style={{ animation: "contact-spin 0.6s linear infinite" }}
               />
             ) : (
-              <span
-                style={{
-                  fontFamily: "var(--font-montserrat)",
-                  fontSize: "12px",
-                  fontWeight: 500,
-                  letterSpacing: "0.15em",
-                  textTransform: "uppercase",
-                  color: "var(--color-cream)",
-                }}
-              >
+              <span className="font-sans text-[12px] font-medium uppercase tracking-[0.15em] text-cream">
                 {sent ? "Sent" : "Begin"}
               </span>
             )}
@@ -278,23 +180,12 @@ export function ContactForm({ onSuccess }: ContactFormProps) {
           <p
             role="status"
             aria-live="polite"
-            style={{
-              fontFamily: "var(--font-montserrat)",
-              fontSize: "11px",
-              fontWeight: 500,
-              letterSpacing: "0.18em",
-              textTransform: "uppercase",
-              color: "var(--color-secondary)",
-              marginTop: "14px",
-              minHeight: "1em",
-              opacity: sent ? 1 : 0,
-              transition: "opacity 0.25s ease-out",
-            }}
+            className={`font-sans text-[11px] font-medium uppercase tracking-[0.18em] text-secondary mt-3.5 min-h-[1em] transition-opacity duration-[250ms] ease-out ${sent ? "opacity-100" : "opacity-0"}`}
           >
             {sent ? "Message sent" : ""}
           </p>
           {serverError && (
-            <p role="alert" aria-live="assertive" style={{ ...errorStyle, marginTop: "12px" }}>
+            <p role="alert" aria-live="assertive" className={`${ERROR_CLASS} mt-3`}>
               {serverError}
             </p>
           )}

@@ -2,7 +2,7 @@
 
 import { useRef, useEffect, useState, useCallback } from "react";
 import Image from "next/image";
-import type { GalleryPiece } from "@/app/artist";
+import type { GalleryPiece } from "@/app/_lib/artist";
 import { SectionLabel } from "./section-label";
 import { Lightbox } from "./lightbox";
 
@@ -133,96 +133,40 @@ export function Gallery({ pieces }: GalleryProps) {
 
   return (
     <>
-      <section style={{ marginBottom: "40px" }}>
+      <section className="mb-10">
         <SectionLabel title="Works" />
 
         {/* Horizontal scroll strip — focusable, keyboard navigable */}
         <div
           ref={stripRef}
-          className="gallery-strip"
+          className="gallery-strip flex gap-4 overflow-x-auto overflow-y-hidden pb-2 -mx-14 px-14 cursor-grab [scrollbar-width:none] [-webkit-overflow-scrolling:touch]"
           role="region"
           aria-label="Selected works — horizontal gallery. Use left and right arrow keys to browse."
           tabIndex={0}
           onKeyDown={onStripKeyDown}
-          style={{
-            display: "flex",
-            gap: "16px",
-            overflowX: "auto",
-            overflowY: "hidden",
-            paddingBottom: "8px",
-            marginLeft: "-56px",
-            marginRight: "-56px",
-            paddingLeft: "56px",
-            paddingRight: "56px",
-            cursor: "grab",
-            scrollbarWidth: "none",
-            WebkitOverflowScrolling: "touch",
-          }}
         >
           {pieces.map((piece, i) => (
             <button
               key={piece.title}
               onClick={() => openLightbox(i)}
-              className="gallery-card"
-              style={{
-                flex: "0 0 auto",
-                /* Clamp so 320px viewports fit a card with right-edge
-                   peek indicating scroll; desktop keeps the 280px spec. */
-                width: "clamp(220px, 75vw, 280px)",
-                border: "none",
-                background: "none",
-                padding: 0,
-                cursor: "pointer",
-                textAlign: "left",
-                scrollSnapAlign: "start",
-              }}
+              className="gallery-card flex-none border-0 bg-transparent p-0 cursor-pointer text-left [scroll-snap-align:start] w-[clamp(220px,75vw,280px)]"
             >
               {/* Thumbnail — aspect-ratio locked so the masonry can't shift
-                  while the browser decodes the image. Width 100% inherits
-                  the button's clamp, so the ratio adapts. */}
-              <div
-                style={{
-                  width: "100%",
-                  aspectRatio: "280 / 360",
-                  position: "relative",
-                  overflow: "hidden",
-                  backgroundColor: "var(--color-canvas)",
-                }}
-              >
+                  while the browser decodes the image. */}
+              <div className="w-full relative overflow-hidden bg-canvas aspect-[280/360]">
                 <Image
                   src={piece.image}
                   alt={piece.title}
                   fill
                   sizes="(max-width: 360px) 75vw, 280px"
-                  style={{
-                    objectFit: "cover",
-                    transition: "transform 1.2s cubic-bezier(0.2, 0.8, 0.2, 1)",
-                  }}
+                  className="object-cover transition-transform duration-[1200ms] ease-[cubic-bezier(0.2,0.8,0.2,1)]"
                 />
               </div>
               {/* Caption */}
-              <p
-                className="font-serif italic"
-                style={{
-                  fontSize: "12.5px",
-                  color: "var(--color-ink)",
-                  marginTop: "10px",
-                  opacity: 0.75,
-                  transition: "opacity 0.6s ease",
-                }}
-              >
+              <p className="font-serif italic text-[12.5px] text-ink mt-2.5 opacity-75 transition-opacity duration-[600ms] ease">
                 {piece.title}
               </p>
-              <p
-                style={{
-                  fontSize: "10px",
-                  fontWeight: 400,
-                  color: "var(--color-secondary)",
-                  marginTop: "2px",
-                  opacity: 0.55,
-                  transition: "opacity 0.6s ease",
-                }}
-              >
+              <p className="text-[10px] font-normal text-secondary mt-0.5 opacity-55 transition-opacity duration-[600ms] ease">
                 {piece.year}
               </p>
             </button>
@@ -230,18 +174,7 @@ export function Gallery({ pieces }: GalleryProps) {
         </div>
 
         {/* Scroll hint */}
-        <p
-          style={{
-            fontSize: "9px",
-            fontWeight: 500,
-            color: "var(--color-divider)",
-            letterSpacing: "0.2em",
-            textTransform: "uppercase",
-            marginTop: "20px",
-            textAlign: "center",
-            opacity: 0.7,
-          }}
-        >
+        <p className="text-[9px] font-medium text-divider tracking-[0.2em] uppercase mt-5 text-center opacity-70">
           Drag or use arrow keys · click to enlarge
         </p>
       </section>

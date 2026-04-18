@@ -3,7 +3,7 @@
 import { useRef, useEffect, useState } from "react";
 import { gsap } from "gsap";
 import Image from "next/image";
-import type { ContactInfo } from "@/app/artist";
+import type { ContactInfo } from "@/app/_lib/artist";
 
 interface IdentityProps {
   name: string;
@@ -143,7 +143,7 @@ export function Identity({ name, discipline }: IdentityProps) {
           }}
         >
           <Image
-            src="/victoria-portrait.png"
+            src="/victoria-portrait.jpg"
             alt={name}
             fill
             priority
@@ -214,7 +214,7 @@ export function Identity({ name, discipline }: IdentityProps) {
             }}
           >
             <Image
-              src="/victoria-portrait.png"
+              src="/victoria-portrait.jpg"
               alt={name}
               fill
               sizes="100vw"

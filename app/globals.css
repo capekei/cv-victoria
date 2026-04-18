@@ -381,7 +381,17 @@ a, button, .hover-underline, .img-zoom-container, .portrait-zoom-container {
   }
 }
 
-/* ===== Contact Page ===== */
+/* ===== Contact Page =====
+   Lock the document background to near-black on routes that mount the
+   contact experience. The fixed-viewport VideoBackground covers the
+   viewport, but on iOS rubber-band overscroll and on overshoot past
+   the pin spacer, the html's own background can flash through. Match
+   the video's dark grading so any exposed area reads as painting shadow,
+   never the cv home's cream. */
+:has(> [data-contact-section]),
+html:has([data-contact-section]) {
+  background-color: #0a0908;
+}
 
 /* Scroll indicator pulse */
 @keyframes contact-pulse {

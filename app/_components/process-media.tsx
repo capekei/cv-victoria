@@ -40,20 +40,18 @@ export function ProcessMedia({ image, video, alt }: ProcessMediaProps) {
     <div
       onMouseEnter={video ? handleEnter : undefined}
       onMouseLeave={video ? handleLeave : undefined}
-      style={{
-        position: "absolute",
-        inset: 0,
-        overflow: "hidden",
-      }}
+      className="absolute inset-0 overflow-hidden"
     >
       <Image
         src={image}
         alt={alt}
         fill
         sizes="140px"
+        className="object-cover transition-[opacity,transform] duration-500 ease-out"
         style={{
-          objectFit: "cover",
-          transition: "opacity 0.5s ease, transform 1.2s cubic-bezier(0.2, 0.8, 0.2, 1)",
+          transitionProperty: "opacity, transform",
+          transitionDuration: "0.5s, 1.2s",
+          transitionTimingFunction: "ease, cubic-bezier(0.2, 0.8, 0.2, 1)",
           opacity: video && hovering && videoReady ? 0 : 1,
           transform: hovering ? "scale(1.05)" : "scale(1)",
         }}
@@ -67,16 +65,8 @@ export function ProcessMedia({ image, video, alt }: ProcessMediaProps) {
           playsInline
           preload="metadata"
           onCanPlay={() => setVideoReady(true)}
-          style={{
-            position: "absolute",
-            inset: 0,
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-            opacity: hovering && videoReady ? 1 : 0,
-            transition: "opacity 0.5s ease",
-            pointerEvents: "none",
-          }}
+          className="absolute inset-0 w-full h-full object-cover transition-opacity duration-500 pointer-events-none"
+          style={{ opacity: hovering && videoReady ? 1 : 0 }}
         />
       )}
     </div>

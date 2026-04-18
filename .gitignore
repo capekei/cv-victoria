@@ -12,6 +12,9 @@
 
 # testing
 /coverage
+/test-results/
+/playwright-report/
+/e2e-*.png
 
 # next.js
 /.next/
@@ -42,6 +45,13 @@ yarn-error.log*
 
 # pnpm store
 .pnpm-store/
+
+# mcp / tooling scratch
+.playwright-mcp/
+mempalace.yaml
+
+# local design references (screenshots, mocks)
+.design-refs/
 
 # typescript
 *.tsbuildinfo

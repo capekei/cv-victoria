@@ -1,4 +1,4 @@
-import type { EducationEntry } from "@/app/artist";
+import type { EducationEntry } from "@/app/_lib/artist";
 import { SectionLabel } from "./section-label";
 
 interface EducationProps {
@@ -7,57 +7,23 @@ interface EducationProps {
 
 export function Education({ education }: EducationProps) {
   return (
-    <section style={{ marginBottom: "40px" }}>
+    <section className="mb-10">
       <SectionLabel title="Education" />
-      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+      <div className="flex flex-col gap-4">
         {education.map((entry) => (
           <div key={entry.institution}>
-            <p
-              className="font-medium text-ink"
-              style={{ fontSize: "13px", fontWeight: 500 }}
-            >
-              {entry.degree}
-            </p>
-            <p
-              style={{
-                fontSize: "11.5px",
-                fontWeight: 400,
-                color: "var(--color-secondary)",
-                marginTop: "2px",
-              }}
-            >
+            <p className="font-medium text-ink text-[13px]">{entry.degree}</p>
+            <p className="text-[11.5px] font-normal text-secondary mt-0.5">
               {entry.institution}, {entry.location}
             </p>
             {entry.details && (
-              <div
-                style={{
-                  marginTop: "6px",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "2px",
-                }}
-              >
+              <div className="mt-1.5 flex flex-col gap-0.5">
                 {entry.details.map((detail) => (
                   <p
                     key={detail}
-                    style={{
-                      fontSize: "11px",
-                      fontWeight: 400,
-                      color: "var(--color-secondary)",
-                      paddingLeft: "12px",
-                      position: "relative",
-                      opacity: 0.75,
-                    }}
+                    className="text-[11px] font-normal text-secondary pl-3 relative opacity-75"
                   >
-                    <span
-                      style={{
-                        position: "absolute",
-                        left: 0,
-                        color: "var(--color-divider)",
-                      }}
-                    >
-                      &ndash;
-                    </span>
+                    <span className="absolute left-0 text-divider">&ndash;</span>
                     {detail}
                   </p>
                 ))}

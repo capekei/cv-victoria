@@ -78,20 +78,7 @@ export function Lightbox({ item, index, total, onClose, onPrev, onNext }: Lightb
     <div
       ref={ref}
       onClick={onClose}
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 100,
-        backgroundColor: "rgba(20, 18, 16, 0.96)",
-        backdropFilter: "blur(8px)",
-        WebkitBackdropFilter: "blur(8px)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "32px",
-        cursor: "pointer",
-        overflowY: "auto",
-      }}
+      className="fixed inset-0 z-[100] flex items-center justify-center p-8 cursor-pointer overflow-y-auto bg-[rgba(20,18,16,0.96)] backdrop-blur-[8px] [-webkit-backdrop-filter:blur(8px)]"
     >
       <button
         type="button"
@@ -100,57 +87,19 @@ export function Lightbox({ item, index, total, onClose, onPrev, onNext }: Lightb
           e.stopPropagation();
           onClose();
         }}
-        style={{
-          position: "fixed",
-          top: "20px",
-          right: "20px",
-          width: "40px",
-          height: "40px",
-          border: "1px solid rgba(255, 255, 255, 0.3)",
-          borderRadius: "999px",
-          background: "rgba(10, 9, 8, 0.45)",
-          color: "rgba(255, 255, 255, 0.88)",
-          fontSize: "16px",
-          lineHeight: 1,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          cursor: "pointer",
-          zIndex: 120,
-          backdropFilter: "blur(4px)",
-          WebkitBackdropFilter: "blur(4px)",
-          transition: "border-color 0.25s ease, color 0.25s ease",
-        }}
+        className="fixed top-5 right-5 w-10 h-10 rounded-full flex items-center justify-center cursor-pointer z-[120] text-[16px] leading-none border border-white/30 bg-[rgba(10,9,8,0.45)] text-white/[0.88] backdrop-blur-[4px] [-webkit-backdrop-filter:blur(4px)] transition-[border-color,color] duration-[250ms] ease"
       >
         ×
       </button>
 
-      <div
-        className="lb-content"
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          maxWidth: "min(1400px, 96vw)",
-          width: "100%",
-          height: "100%",
-          cursor: "pointer",
-        }}
-      >
+      <div className="lb-content flex flex-col items-center w-full h-full cursor-pointer max-w-[min(1400px,96vw)]">
         {/* Image or Video */}
         <div
           onClick={(e) => {
             e.stopPropagation();
             if (!item.video) setIsFullscreen((v) => !v);
           }}
-          style={{
-            width: "100%",
-            flex: "1 1 auto",
-            minHeight: 0,
-            position: "relative",
-            overflow: "hidden",
-            cursor: item.video ? "default" : "zoom-in",
-          }}
+          className={`w-full flex-auto min-h-0 relative overflow-hidden ${item.video ? "cursor-default" : "cursor-zoom-in"}`}
         >
           {item.video ? (
             <video
@@ -160,13 +109,7 @@ export function Lightbox({ item, index, total, onClose, onPrev, onNext }: Lightb
               loop
               playsInline
               controls={false}
-              style={{
-                position: "absolute",
-                inset: 0,
-                width: "100%",
-                height: "100%",
-                objectFit: "contain",
-              }}
+              className="absolute inset-0 w-full h-full object-contain"
             />
           ) : (
             <Image
@@ -174,7 +117,7 @@ export function Lightbox({ item, index, total, onClose, onPrev, onNext }: Lightb
               alt={item.title}
               fill
               sizes="96vw"
-              style={{ objectFit: "contain" }}
+              className="object-contain"
               priority
             />
           )}
@@ -182,16 +125,7 @@ export function Lightbox({ item, index, total, onClose, onPrev, onNext }: Lightb
 
         {/* Thumbnail strip (only if multiple images and not a video item) */}
         {!item.video && allImages.length > 1 && (
-          <div
-            style={{
-              display: "flex",
-              gap: "8px",
-              marginTop: "16px",
-              flexShrink: 0,
-              flexWrap: "wrap",
-              justifyContent: "center",
-            }}
-          >
+          <div className="flex gap-2 mt-4 shrink-0 flex-wrap justify-center">
             {allImages.map((src, i) => (
               <button
                 key={src}
@@ -199,69 +133,29 @@ export function Lightbox({ item, index, total, onClose, onPrev, onNext }: Lightb
                   e.stopPropagation();
                   setActiveImageIndex(i);
                 }}
-                style={{
-                  width: "48px",
-                  height: "48px",
-                  position: "relative",
-                  border:
-                    i === activeImageIndex
-                      ? "1px solid rgba(255, 255, 255, 0.85)"
-                      : "1px solid rgba(255, 255, 255, 0.15)",
-                  overflow: "hidden",
-                  padding: 0,
-                  cursor: "pointer",
-                  background: "none",
-                  opacity: i === activeImageIndex ? 1 : 0.45,
-                  transition: "opacity 0.3s ease, border-color 0.3s ease",
-                }}
+                data-active={i === activeImageIndex}
+                className="w-12 h-12 relative overflow-hidden p-0 cursor-pointer bg-transparent border border-white/15 opacity-45 data-[active=true]:border-white/85 data-[active=true]:opacity-100 transition-[opacity,border-color] duration-300 ease"
               >
-                <Image src={src} alt="" fill sizes="48px" style={{ objectFit: "cover" }} />
+                <Image src={src} alt="" fill sizes="48px" className="object-cover" />
               </button>
             ))}
           </div>
         )}
 
         {/* Info bar */}
-        <div
-          style={{
-            width: "100%",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "baseline",
-            marginTop: "16px",
-            gap: "16px",
-            flexShrink: 0,
-          }}
-        >
+        <div className="w-full flex justify-between items-baseline mt-4 gap-4 shrink-0">
           <div>
-            <p
-              className="font-serif italic"
-              style={{ fontSize: "15px", color: "rgba(255, 255, 255, 0.92)" }}
-            >
+            <p className="font-serif italic text-[15px] text-white/[0.92]">
               {item.title}
             </p>
             {item.caption && (
-              <p
-                style={{
-                  fontSize: "10px",
-                  color: "rgba(255, 255, 255, 0.5)",
-                  marginTop: "5px",
-                  letterSpacing: "0.01em",
-                }}
-              >
+              <p className="text-[10px] text-white/50 mt-[5px] tracking-[0.01em]">
                 {item.caption}
               </p>
             )}
           </div>
           {total > 1 && (
-            <p
-              style={{
-                fontSize: "10px",
-                color: "rgba(255, 255, 255, 0.5)",
-                flexShrink: 0,
-                letterSpacing: "0.05em",
-              }}
-            >
+            <p className="text-[10px] text-white/50 shrink-0 tracking-[0.05em]">
               {index + 1} / {total}
             </p>
           )}
@@ -269,51 +163,18 @@ export function Lightbox({ item, index, total, onClose, onPrev, onNext }: Lightb
 
         {/* Navigation arrows */}
         {total > 1 && (
-          <div
-            style={{
-              display: "flex",
-              gap: "14px",
-              marginTop: "14px",
-              flexShrink: 0,
-            }}
-          >
+          <div className="flex gap-[14px] mt-[14px] shrink-0">
             <button
               onClick={(e) => { e.stopPropagation(); onPrev(); }}
               disabled={index === 0}
-              style={{
-                width: "38px",
-                height: "38px",
-                border: "1px solid rgba(255, 255, 255, 0.2)",
-                borderRadius: "50%",
-                background: "none",
-                color: index === 0 ? "rgba(255, 255, 255, 0.2)" : "rgba(255, 255, 255, 0.85)",
-                cursor: index === 0 ? "default" : "pointer",
-                fontSize: "14px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                transition: "border-color 0.3s ease, color 0.3s ease",
-              }}
+              className="w-[38px] h-[38px] rounded-full bg-transparent flex items-center justify-center text-[14px] border border-white/20 text-white/85 cursor-pointer disabled:text-white/20 disabled:cursor-default transition-[border-color,color] duration-300 ease"
             >
               ←
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); onNext(); }}
               disabled={index === total - 1}
-              style={{
-                width: "38px",
-                height: "38px",
-                border: "1px solid rgba(255, 255, 255, 0.2)",
-                borderRadius: "50%",
-                background: "none",
-                color: index === total - 1 ? "rgba(255, 255, 255, 0.2)" : "rgba(255, 255, 255, 0.85)",
-                cursor: index === total - 1 ? "default" : "pointer",
-                fontSize: "14px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                transition: "border-color 0.3s ease, color 0.3s ease",
-              }}
+              className="w-[38px] h-[38px] rounded-full bg-transparent flex items-center justify-center text-[14px] border border-white/20 text-white/85 cursor-pointer disabled:text-white/20 disabled:cursor-default transition-[border-color,color] duration-300 ease"
             >
               →
             </button>
@@ -321,17 +182,7 @@ export function Lightbox({ item, index, total, onClose, onPrev, onNext }: Lightb
         )}
 
         {/* Close hint */}
-        <p
-          style={{
-            fontSize: "9px",
-            fontWeight: 500,
-            color: "rgba(255, 255, 255, 0.35)",
-            letterSpacing: "0.2em",
-            textTransform: "uppercase",
-            marginTop: "14px",
-            flexShrink: 0,
-          }}
-        >
+        <p className="text-[9px] font-medium text-white/35 tracking-[0.2em] uppercase mt-[14px] shrink-0">
           {item.video ? "Tap outside to close" : "Tap image to enlarge · tap outside to close"}
         </p>
       </div>
@@ -343,24 +194,15 @@ export function Lightbox({ item, index, total, onClose, onPrev, onNext }: Lightb
             e.stopPropagation();
             setIsFullscreen(false);
           }}
-          style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 110,
-            backgroundColor: "rgba(10, 9, 8, 0.98)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            cursor: "zoom-out",
-          }}
+          className="fixed inset-0 z-[110] flex items-center justify-center cursor-zoom-out bg-[rgba(10,9,8,0.98)]"
         >
-          <div style={{ position: "relative", width: "100vw", height: "100vh" }}>
+          <div className="relative w-screen h-screen">
             <Image
               src={allImages[activeImageIndex]}
               alt={item.title}
               fill
               sizes="100vw"
-              style={{ objectFit: "contain" }}
+              className="object-contain"
               priority
             />
           </div>

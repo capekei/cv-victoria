@@ -99,7 +99,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${bodoniModa.variable} ${montserrat.variable}`}>
-      <body className="font-sans text-ink antialiased bg-canvas">
+      {/* suppressHydrationWarning: scoped to <body> only — neutralizes attributes
+          injected by browser extensions (ColorZilla's cz-shortcut-listen,
+          Grammarly's data-gr-*, Dark Reader, etc.) before React hydrates. */}
+      <body
+        className="font-sans text-ink antialiased bg-canvas"
+        suppressHydrationWarning
+      >
         {/* Skip-to-content — first focusable element; jumps past the identity
             panel straight into the scroll panel where the CV content lives. */}
         <a href="#cv-content" className="skip-link">

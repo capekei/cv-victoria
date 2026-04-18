@@ -146,8 +146,10 @@ export function Postscript({ active }: PostscriptProps) {
         width: "min(420px, calc(100vw - 48px))",
         padding: "36px 28px",
         background: "rgba(247, 246, 242, 0.88)",
-        backdropFilter: "blur(20px)",
-        WebkitBackdropFilter: "blur(20px)",
+        /* `--glass-blur` is driven by ContactExperience during the scroll
+           swap so frost ramps in sync with the form's frost ramping out. */
+        backdropFilter: "blur(var(--glass-blur, 20px))",
+        WebkitBackdropFilter: "blur(var(--glass-blur, 20px))",
         borderRadius: "5px",
         boxShadow: "0 20px 60px rgba(0,0,0,0.15)",
       }}
@@ -177,6 +179,12 @@ export function Postscript({ active }: PostscriptProps) {
               display: "inline-block",
               marginRight: i < PHRASE_WORDS.length - 1 ? "0.32em" : 0,
               willChange: "opacity, transform",
+              /* Pre-state the words in the "before" GSAP position so the
+                 in-card timeline's gsap.set() doesn't cause a visible
+                 reset-then-reveal flash when `started` flips true mid-swap.
+                 GSAP overrides these immediately once useEffect fires. */
+              opacity: 0,
+              transform: "translateY(12px)",
             }}
           >
             {word}
@@ -195,6 +203,12 @@ export function Postscript({ active }: PostscriptProps) {
           borderRadius: "3px",
           background: "var(--color-canvas)",
           willChange: "opacity, clip-path",
+          /* Matching pre-state to the words above — horizontal curtain
+             closed, invisible — so gsap.set() on started doesn't visibly
+             snap the media from its rendered-open state to the closed one
+             before animating back open. */
+          opacity: 0,
+          clipPath: "inset(0% 50% 0% 50%)",
         }}
       >
         <Image

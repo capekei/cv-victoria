@@ -6,30 +6,18 @@ interface StatementProps {
 
 export function Statement({ paragraphs }: StatementProps) {
   return (
-    <section style={{ marginBottom: "40px" }}>
+    <section className="mb-10">
       <SectionLabel title="Statement" />
 
-      <p
-        className="font-serif italic text-ink"
-        style={{
-          fontSize: "17px",
-          lineHeight: "1.65",
-          fontWeight: 400,
-          marginBottom: "14px",
-        }}
-      >
+      <p className="font-serif italic text-ink text-[17px] leading-[1.65] font-normal mb-3.5">
         {paragraphs[0]}
       </p>
       {paragraphs.slice(1).map((p, i) => (
         <p
           key={i}
-          style={{
-            fontSize: "12.5px",
-            lineHeight: "1.85",
-            fontWeight: 400,
-            color: "var(--color-secondary)",
-            marginBottom: i < paragraphs.length - 2 ? "10px" : "0",
-          }}
+          className={`text-[12.5px] leading-[1.85] font-normal text-secondary ${
+            i < paragraphs.length - 2 ? "mb-2.5" : ""
+          }`}
         >
           {p}
         </p>

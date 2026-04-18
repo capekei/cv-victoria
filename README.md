@@ -1,36 +1,62 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Victoria Zeder — Visual Artist Portfolio
 
-## Getting Started
+Editorial-quality single-page site for [victoriazeder.com](https://victoriazeder.com): Miami-based visual artist working in 24k gold leaf, acrylic ink, thread, and encaustic. Living Systems (2026).
 
-First, run the development server:
+## Stack
+
+| | |
+|---|---|
+| Framework | Next.js 16 (App Router, Turbopack) |
+| React | 19 |
+| Styling | Tailwind CSS v4 (`@theme inline` tokens) |
+| Animation | GSAP 3 + Lenis (bridged to ScrollTrigger in `scroll-panel.tsx`) |
+| Validation | Zod 4 |
+| Contact | Server Action → Nodemailer over SMTP |
+| Rate-limit | Upstash Ratelimit (falls back to in-memory) |
+| Hosting | Vercel (all routes statically prerendered) |
+
+## Routes
+
+| Path | Kind | Notes |
+|---|---|---|
+| `/` | static | Identity panel + scroll panel (statement, works, process, exhibitions, education, contact CTA) |
+| `/contact` | static | Multi-phase pinned scroll experience: quote → invitation words → contact form → "my best work." postscript |
+| `/sitemap.xml`, `/robots.txt`, `/apple-icon`, `/icon.svg` | static | SEO + social surface |
+
+## Local development
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install
+cp .env.example .env.local   # fill SMTP_* + optional UPSTASH_*
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Dev server runs on `http://localhost:3000`. `pnpm build` + `pnpm start` for production parity.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Quality gates
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+pnpm typecheck   # strict TS, zero `any`
+pnpm lint        # eslint-config-next
+pnpm test:e2e    # Playwright smoke (8 tests, chromium only, ~4s)
+```
 
-## Learn More
+All three must pass before merge.
 
-To learn more about Next.js, take a look at the following resources:
+## Architecture in 60 seconds
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Data** — `app/_lib/artist.ts` is the single source of truth. Person, works, exhibitions, education, process, contact info all live there. Server components read it; JSON-LD is generated from the same shape in `app/_lib/jsonld.ts`.
+- **Private folders** — `app/_components/` (UI), `app/_lib/` (data + serialization + Zod schemas), `app/_actions/` (Server Actions). The `_` prefix keeps them out of the route tree.
+- **Contact experience** — `app/_components/contact/ContactExperience.tsx` orchestrates five phases via a single raw-scroll handler. Lenis provides momentum; phase progress functions drive opacity/transform/blur. Viewport-fixed `VideoBackground` + `GrainOverlay` layer at z-index 0; phase content layers above.
+- **Email** — form posts to the `submitContact` Server Action, which rate-limits by IP (Upstash preferred, in-memory fallback), validates via Zod, strips CRLF from header-bound fields, escapes HTML in the email body, and delivers via Nodemailer.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Deploying
 
-## Deploy on Vercel
+Connected to Vercel. Pushing to `main` deploys production. Preview URLs for every other branch. Zero custom CI config — Next.js + Vercel defaults.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Project conventions
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Spanish UI text on DR projects; English here** (per global CLAUDE.md rules).
+- **No brand color or font changes without approval.**
+- **Strict TS, no `any`.**
+- **Inline styles are acceptable only for GSAP-driven values or CSS-custom-property bridges** — static styling goes through Tailwind.

@@ -24,6 +24,12 @@ const WORDS = [
 export function ContactExperience() {
   /* Refs — phase sections */
   const videoSectionRef = useRef<HTMLElement>(null);
+  /* Backdrop lives OUTSIDE the pinned section as a viewport-fixed layer
+     so the painting video keeps covering the viewport even if scroll
+     momentum overshoots the pin boundary — prevents the page's cream
+     background from peeking below the postscript card on touchpads /
+     Safari overscroll. */
+  const backdropRef = useRef<HTMLDivElement>(null);
   const phase1Ref = useRef<HTMLDivElement>(null);
   const scrollIndicatorRef = useRef<HTMLDivElement>(null);
   const phase2Ref = useRef<HTMLDivElement>(null);
@@ -109,6 +115,9 @@ export function ContactExperience() {
           ref.current.style.pointerEvents = "auto";
         }
       });
+      if (phase4PostscriptRef.current) {
+        phase4PostscriptRef.current.style.setProperty("--glass-blur", "20px");
+      }
       /* Reduced-motion visitors see both cards in document flow —
          postscript shows beneath the form, playback drivers unchanged. */
       setPostscriptActive(true);
@@ -123,9 +132,9 @@ export function ContactExperience() {
        "video, img" so the B&W → color filter animates identically on
        both touch and pointer devices. ========== */
     /* vh floor at 560 so very short landscape phones don't rush the
-       1.6vh form-entrance + 1.5vh postscript-swap animations into
-       sub-100px of scroll, which makes them feel jumpy. Math is still
-       vh-relative; only the minimum changes. */
+       form-entrance or the long form↔postscript swap into too few
+       pixels of scroll. Math is still vh-relative; only the minimum
+       changes. */
     const vh = Math.max(window.innerHeight, 560);
     /* Deliberately slow timeline — each phase stretched enough to feel
        noticeably slower on trackpads, mouse wheels, and touch flicks.
@@ -136,9 +145,9 @@ export function ContactExperience() {
          7.8   → 8.2vh   Dead zone
          8.2   → 9.8vh   Form rises
          9.8   → 10.8vh  Form at rest
-         10.8  → 12.4vh  Form fades out / postscript card swaps in
-         12.4  → 13.5vh  Postscript at rest */
-    const pinDistance = 13.5 * vh; // total scroll distance while pinned
+         10.8  → 13.05vh Long swap (form ↔ postscript, cubic ease — more scroll)
+         13.05 → 14.25vh Postscript at rest */
+    const pinDistance = 14.25 * vh; // total scroll distance while pinned
 
     /* Spacer must be pinDistance + vh so the last phase fully reveals.
        The section is position:fixed during pin (0 height in flow), so
@@ -178,6 +187,7 @@ export function ContactExperience() {
       phase4PostscriptRef.current.style.opacity = "0";
       phase4PostscriptRef.current.style.transform = "translateY(60px)";
       phase4PostscriptRef.current.style.pointerEvents = "none";
+      phase4PostscriptRef.current.style.setProperty("--glass-blur", "0px");
     }
     wordRefs.current.forEach((w) => {
       if (w) {
@@ -193,16 +203,19 @@ export function ContactExperience() {
     /* power2.inOut easing for softer fade transitions */
     const easeInOut2 = (t: number) =>
       t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+    /* power3.inOut — softer acceleration than quad for long scroll-driven
+       handoffs (matches GSAP power3.inOut feel). */
+    const easeInOut3 = (t: number) =>
+      t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 
-    /* ── Scroll smoothing (emulates GSAP scrub: 1.5) ──
-       Raw scroll drives the pin instantly (no jitter), while a
-       lerped value drives the phase animations so they feel floaty.
-       Lerp factor 0.1 per frame ≈ ~150ms half-life. */
-    let targetScroll = 0;
-    let smoothScroll = 0;
-    let rafId = 0;
-
-    /* Phase-animation driver — reads smoothScroll, not raw scroll */
+    /* Phases are driven directly from the (clamped) raw scroll so
+       they stay in lockstep with the pin/unpin boundary. Input
+       smoothing (a lerp RAF) was removed because it desynced the
+       last transition: the section would unpin the instant raw
+       scroll crossed `pinDistance`, but the postscript rise was
+       still lerping — finishing "on its own" after the visitor had
+       already stopped scrolling. Easing lives where it belongs:
+       on each phase's progress, not on the input. */
     const renderPhases = (scroll: number) => {
       /* ── Phase 1: fade out over 0→2.2vh ── */
       const p1 = clamp01(scroll / (2.2 * vh));
@@ -242,9 +255,10 @@ export function ContactExperience() {
 
       /* ── Phase 3a: background media B&W → color, from 5.6vh → 7.8vh.
          Desktop targets <video>; mobile targets the Next.js <img>
-         fallback. CSS filter animates identically on both. */
+         fallback. CSS filter animates identically on both. Lookup now
+         goes against the viewport-fixed backdrop layer, not the section. */
       const pVideo = clamp01((scroll - 5.6 * vh) / (2.2 * vh));
-      const mediaTarget = videoSection.querySelector(
+      const mediaTarget = backdropRef.current?.querySelector(
         "video, img",
       ) as HTMLVideoElement | HTMLImageElement | null;
       if (mediaTarget) {
@@ -259,28 +273,33 @@ export function ContactExperience() {
       const pForm = clamp01((scroll - 8.2 * vh) / (1.6 * vh));
       const easedForm = easeOut2(pForm);
 
-      /* ── Phase 4a: form fades out from 10.8vh → 12.4vh ──
-         Starts after a 1vh rest window (9.8 → 10.8) so the visitor
-         sees the form composed and legible before it begins its exit. */
-      const pFormExit = clamp01((scroll - 10.8 * vh) / (1.6 * vh));
-      const easedExit = easeInOut2(pFormExit);
+      /* ── Phase 4: form → postscript swap.
+         Generous 50% overlap cross-fade. At the moment the form hits
+         zero (formExitT=1 at swapT=0.65), the postscript is already
+         ~71% visible — no blank beat, no "jump". Both cards occupy
+         the same viewport position with matched 20px glass frost, and
+         neither translates during the swap. Pure cross-dissolve of
+         two frosted panes. The postscript's in-card word/media
+         timeline fires at 10% entered so it finishes behind the fade
+         rather than flashing content as the card becomes visible. */
+      const swapStart = 10.8 * vh;
+      const swapEnd = 13.05 * vh;
+      const swapRaw = clamp01((scroll - swapStart) / (swapEnd - swapStart));
+      const swapT = easeInOut3(swapRaw);
+      const formExitT = clamp01(swapT / 0.65);
+      const postscriptEnterT = clamp01((swapT - 0.15) / 0.7);
 
       if (phase3Ref.current) {
-        /* Compose Phase 3b entrance and Phase 4a exit. The entrance
-           brings the form up and solidifies the glass; the exit fades
-           it out and drifts it upward. Only one is "active" at a time
-           because their scroll ranges don't overlap. */
-        const formOpacity = easedForm * (1 - easedExit);
-        const formY = 60 * (1 - easedForm) - 40 * easedExit;
+        const formOpacity = easedForm * (1 - formExitT);
+        const formY = 60 * (1 - easedForm);
         phase3Ref.current.style.opacity = String(formOpacity);
         phase3Ref.current.style.transform = `translateY(${formY}px)`;
         phase3Ref.current.style.setProperty(
           "--glass-blur",
-          `${20 * easedForm * (1 - easedExit)}px`,
+          `${20 * easedForm}px`,
         );
-        /* Interactive only when the form is actually the active card */
         phase3Ref.current.style.pointerEvents =
-          formOpacity > 0.5 && easedExit < 0.3 ? "auto" : "none";
+          formOpacity > 0.5 && formExitT < 0.3 ? "auto" : "none";
       }
 
       /* ── Keep-scrolling hint ──
@@ -331,48 +350,36 @@ export function ContactExperience() {
         }
       }
 
-      /* ── Phase 4b: postscript card rises from 11.1vh → 12.6vh ──
-         Starts 0.3vh after the form begins fading so the two pass
-         each other rather than collide. */
-      const pPost = clamp01((scroll - 11.1 * vh) / (1.5 * vh));
-      const easedPost = easeOut2(pPost);
       if (phase4PostscriptRef.current) {
-        phase4PostscriptRef.current.style.opacity = String(easedPost);
-        phase4PostscriptRef.current.style.transform = `translateY(${
-          60 * (1 - easedPost)
-        }px)`;
+        phase4PostscriptRef.current.style.opacity = String(postscriptEnterT);
+        /* No Y drift during the swap — the card fades in at its final
+           resting position. Movement on top of the cross-fade was the
+           source of the "jumps" feeling. */
+        phase4PostscriptRef.current.style.transform = "translateY(0)";
+        /* Constant 20px frost throughout the entrance. Ramping blur from
+           0 also contributed to the visual noise. */
+        phase4PostscriptRef.current.style.setProperty("--glass-blur", "20px");
         phase4PostscriptRef.current.style.pointerEvents =
-          easedPost > 0.5 ? "auto" : "none";
+          postscriptEnterT > 0.7 ? "auto" : "none";
       }
-      /* Autoplay the daughter video + run the in-card GSAP once the
-         postscript is genuinely on screen. React bails out on === value
-         so this is safe to call every frame. */
-      setPostscriptActive(easedPost > 0.6);
+      /* Fire the in-card word/media timeline as soon as the postscript
+         starts fading in — by the time the card is visible, the
+         staggered word reveal and the clip-path curtain on the video
+         have finished animating. No content flash mid-fade. */
+      setPostscriptActive(postscriptEnterT > 0.1);
     };
 
-    /* RAF loop — lerp smoothScroll toward targetScroll */
-    const tick = () => {
-      const delta = targetScroll - smoothScroll;
-      /* Snap to target if essentially there (prevents sub-pixel thrash) */
-      if (Math.abs(delta) < 0.1) {
-        smoothScroll = targetScroll;
-      } else {
-        smoothScroll += delta * 0.1;
-      }
-      renderPhases(smoothScroll);
-      if (smoothScroll !== targetScroll) {
-        rafId = requestAnimationFrame(tick);
-      } else {
-        rafId = 0;
-      }
-    };
+    /* The scroll handler — pin and phases share a single scroll value,
+       so they can never drift apart. Wrapped in RAF for sub-frame
+       coalescing when the browser dispatches scroll faster than paint. */
+    let rafScheduled = false;
+    let lastRelScroll = 0;
 
-    /* The scroll handler — pin is instant, phases are deferred to RAF */
-    const onScroll = () => {
-      const scrollY = window.scrollY;
-      const relScroll = scrollY - sectionTop;
+    const applyFrame = () => {
+      rafScheduled = false;
+      const relScroll = lastRelScroll;
 
-      /* ── Pin logic (uses RAW scroll — must be instant) ── */
+      /* ── Pin logic ── */
       if (relScroll >= 0 && relScroll <= pinDistance) {
         videoSection.style.position = "fixed";
         videoSection.style.top = "0";
@@ -393,23 +400,25 @@ export function ContactExperience() {
         videoSection.style.zIndex = "";
       }
 
-      /* Update target scroll for phase animations (clamped 0→pinDistance) */
-      targetScroll = Math.max(0, Math.min(pinDistance, relScroll));
-      if (!rafId) {
-        rafId = requestAnimationFrame(tick);
+      /* Phases read the same (clamped) scroll value as the pin */
+      renderPhases(Math.max(0, Math.min(pinDistance, relScroll)));
+    };
+
+    const onScroll = () => {
+      lastRelScroll = window.scrollY - sectionTop;
+      if (!rafScheduled) {
+        rafScheduled = true;
+        requestAnimationFrame(applyFrame);
       }
     };
 
-    /* Attach listener and run once immediately */
+    /* Attach listener and paint the initial state once */
     window.addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
-    /* First render should paint the initial state without lerp delay */
-    smoothScroll = targetScroll;
-    renderPhases(smoothScroll);
+    lastRelScroll = window.scrollY - sectionTop;
+    applyFrame();
 
     return () => {
       window.removeEventListener("scroll", onScroll);
-      if (rafId) cancelAnimationFrame(rafId);
       spacer.remove();
       videoSection.style.position = "";
       videoSection.style.top = "";
@@ -422,7 +431,29 @@ export function ContactExperience() {
 
   return (
     <>
-      {/* ═══════ PINNED VIDEO SECTION (Phases 1-3) ═══════ */}
+      {/* ═══════ VIEWPORT-FIXED BACKDROP ═══════
+          Lives outside the pinned section so the painting video and
+          grain overlay cover the viewport regardless of where the
+          section is in the scroll lifecycle. Any edge-case overscroll
+          past the pin boundary still shows painting, never cream.
+          pointer-events: none so PauseButton and all phase UI beneath
+          this stacking level remain clickable. */}
+      <div
+        ref={backdropRef}
+        aria-hidden="true"
+        style={{
+          position: "fixed",
+          inset: 0,
+          zIndex: 0,
+          overflow: "hidden",
+          pointerEvents: "none",
+        }}
+      >
+        <VideoBackground onVideoRef={setVideoEl} />
+        <GrainOverlay blendMode="overlay" />
+      </div>
+
+      {/* ═══════ PINNED PHASE ORCHESTRATOR (Phases 1-4) ═══════ */}
       <section
         ref={videoSectionRef}
         data-contact-section
@@ -433,9 +464,6 @@ export function ContactExperience() {
           overflow: "hidden",
         }}
       >
-        {/* Video / Image background */}
-        <VideoBackground onVideoRef={setVideoEl} />
-        <GrainOverlay blendMode="overlay" />
         <PauseButton videoEl={videoEl} />
         {/* Return link — italic serif over the video, no container.
             Mirror of Phase 4's "Return to the work" so the visitor reads
@@ -610,7 +638,12 @@ export function ContactExperience() {
           ))}
         </div>
 
-        {/* ── Phase 3: The Form ── */}
+        {/* ── Phase 3: The Form ──
+             Flex-centers the form card ONLY. The "more." hint is
+             positioned absolutely under the card so it doesn't shift
+             the form's flex center — this is what keeps the Phase 3 →
+             Phase 4 swap reading as a true swap (same viewport point)
+             instead of a vertical slide between two different centers. */}
         <div
           ref={phase3Ref}
           data-contact-phase
@@ -619,37 +652,40 @@ export function ContactExperience() {
             inset: 0,
             zIndex: 6,
             display: "flex",
-            flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
             opacity: 0,
             pointerEvents: "none",
           }}
         >
-          <ContactForm onSuccess={handleSuccess} />
+          <div style={{ position: "relative" }}>
+            <ContactForm onSuccess={handleSuccess} />
 
-          {/* ── Keep-scrolling hint ──
-               Sits directly below the form as a flex sibling, so it
-               anchors to the card's edge on every viewport. A drawing
-               hairline + italic serif "more." with a glow that lifts it
-               off the painting's chaos. Fires ~1s after form at rest.
-               CSS class `cv-contact-hint` toggles display:none on
-               viewports shorter than 560px (landscape phones) so the
-               hint never competes with the form for scarce vertical
-               space. */}
-          <div
-            ref={hintRef}
-            className="cv-contact-hint"
-            aria-hidden="true"
-            style={{
-              marginTop: "clamp(16px, 2.5vh, 28px)",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: "10px",
-              pointerEvents: "none",
-            }}
-          >
+            {/* ── Keep-scrolling hint ──
+                 Absolute under the card: hangs from the card's bottom
+                 edge without pulling the card off viewport center.
+                 Fires ~1s after form at rest. CSS class
+                 `cv-contact-hint` toggles display:none on viewports
+                 shorter than 560px (landscape phones) so the hint
+                 never competes with the form for scarce vertical
+                 space. */}
+            <div
+              ref={hintRef}
+              className="cv-contact-hint"
+              aria-hidden="true"
+              style={{
+                position: "absolute",
+                top: "100%",
+                left: "50%",
+                transform: "translateX(-50%)",
+                marginTop: "clamp(16px, 2.5vh, 28px)",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: "10px",
+                pointerEvents: "none",
+              }}
+            >
             <div
               className="cv-hint-line"
               style={{
@@ -684,6 +720,7 @@ export function ContactExperience() {
             >
               more.
             </span>
+          </div>
           </div>
         </div>
 

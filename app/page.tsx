@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { victoriaZeder } from "@/app/artist";
+import { victoriaZeder } from "@/app/_lib/artist";
 import { Shell } from "./_components/shell";
 import { Identity } from "./_components/identity";
 import { ScrollPanel } from "./_components/scroll-panel";
@@ -9,7 +9,7 @@ import { Gallery } from "./_components/gallery";
 import { Process } from "./_components/process";
 import { Exhibitions } from "./_components/exhibitions";
 import { Education } from "./_components/education";
-import { Contact } from "./_components/contact";
+import { Contact } from "./_components/contact-cta";
 import { buildPersonGraph, safeJsonLd } from "./_lib/jsonld";
 
 export const metadata: Metadata = {

@@ -1,4 +1,4 @@
-import type { Exhibition } from "@/app/artist";
+import type { Exhibition } from "@/app/_lib/artist";
 import { SectionLabel } from "./section-label";
 
 interface ExhibitionsProps {
@@ -14,25 +14,15 @@ export function Exhibitions({ exhibitions }: ExhibitionsProps) {
   let staggerIndex = 0;
 
   return (
-    <section style={{ marginBottom: "40px" }}>
+    <section className="mb-10">
       <SectionLabel title="Exhibitions" />
 
       {upcoming.length > 0 && (
-        <div style={{ marginBottom: "16px" }}>
-          <span
-            style={{
-              fontSize: "9.5px",
-              fontWeight: 600,
-              letterSpacing: "0.15em",
-              textTransform: "uppercase" as const,
-              color: "#7BA7D4",
-              display: "block",
-              marginBottom: "8px",
-            }}
-          >
+        <div className="mb-4">
+          <span className="block text-[9.5px] font-semibold uppercase tracking-[0.15em] text-[#7BA7D4] mb-2">
             Upcoming
           </span>
-          <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+          <div className="flex flex-col gap-[5px]">
             {upcoming.map((e) => (
               <ExhibitionRow
                 key={`${e.year}-${e.title}`}
@@ -46,20 +36,10 @@ export function Exhibitions({ exhibitions }: ExhibitionsProps) {
 
       {selected.length > 0 && (
         <div>
-          <span
-            style={{
-              fontSize: "9.5px",
-              fontWeight: 600,
-              letterSpacing: "0.15em",
-              textTransform: "uppercase" as const,
-              color: "var(--color-secondary)",
-              display: "block",
-              marginBottom: "8px",
-            }}
-          >
+          <span className="block text-[9.5px] font-semibold uppercase tracking-[0.15em] text-secondary mb-2">
             Selected
           </span>
-          <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+          <div className="flex flex-col gap-[5px]">
             {selected.map((e) => (
               <ExhibitionRow
                 key={`${e.year}-${e.title}`}
@@ -86,63 +66,30 @@ function ExhibitionRow({
       href={exhibition.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="hover-underline"
-      style={{
-        fontSize: "13px",
-        fontWeight: 500,
-        color: "inherit",
-        textDecoration: "none",
-      }}
+      className="hover-underline text-[13px] font-medium text-inherit no-underline"
     >
       {exhibition.title}
     </a>
   ) : (
-    <span style={{ fontSize: "13px", fontWeight: 500 }}>
-      {exhibition.title}
-    </span>
+    <span className="text-[13px] font-medium">{exhibition.title}</span>
   );
 
   return (
     <div
-      className="cv-stagger-item"
-      style={{
-        width: "100%",
-        cursor: exhibition.url ? "pointer" : "default",
-        marginBottom: "2px",
-        ["--stagger-i" as string]: index,
-      } as React.CSSProperties}
+      className={`cv-stagger-item w-full mb-0.5 ${exhibition.url ? "cursor-pointer" : "cursor-default"}`}
+      style={{ ["--stagger-i" as string]: index } as React.CSSProperties}
     >
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "baseline",
-        }}
-      >
+      <div className="flex justify-between items-baseline">
         {title}
-        <span
-          style={{
-            fontSize: "11px",
-            fontWeight: 400,
-            color: "var(--color-secondary)",
-            letterSpacing: "0.02em",
-            flexShrink: 0,
-            marginLeft: "16px",
-          }}
-        >
+        <span className="text-[11px] font-normal text-secondary tracking-[0.02em] shrink-0 ml-4">
           {exhibition.location}, {exhibition.year}
         </span>
       </div>
       {(exhibition.dates || exhibition.gallery) && (
-        <p
-          style={{
-            fontSize: "10.5px",
-            color: "var(--color-secondary)",
-            marginTop: "2px",
-            opacity: 0.75,
-          }}
-        >
-          {exhibition.dates}{exhibition.dates && exhibition.gallery ? " · " : ""}{exhibition.gallery}
+        <p className="text-[10.5px] text-secondary mt-0.5 opacity-75">
+          {exhibition.dates}
+          {exhibition.dates && exhibition.gallery ? " · " : ""}
+          {exhibition.gallery}
         </p>
       )}
     </div>

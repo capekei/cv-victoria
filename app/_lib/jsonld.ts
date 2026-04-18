@@ -1,4 +1,4 @@
-import { victoriaZeder } from "@/app/artist";
+import { victoriaZeder } from "@/app/_lib/artist";
 
 export const SITE_URL = "https://victoriazeder.com";
 export const PERSON_ID = `${SITE_URL}/#person`;
@@ -27,7 +27,7 @@ export function buildPerson() {
     description:
       "Formally trained visual artist exploring biomorphic biomimicry and Jungian expression through 24k gold leaf, acrylic ink, thread, and encaustic. Based in Miami, born in the Dominican Republic (1991).",
     url: SITE_URL,
-    image: `${SITE_URL}/victoria-portrait.png`,
+    image: `${SITE_URL}/victoria-portrait.jpg`,
     email: `mailto:${cv.contact.email}`,
     gender: "Female",
     nationality: { "@type": "Country", name: "Dominican Republic" },
